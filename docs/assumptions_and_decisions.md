@@ -2,5 +2,6 @@
 
 | Date | Question or Issue | Evidence | Decision | Reason |
 |---|---|---|---|---|
-|2026-10-12|How to type `order_date`, `order_time`, and `is_repeat_customer` in the raw sales table|Sample row shows clean values, but only one row was inspected|Load as TEXT. Convert and validate during cleaning.|Raw layer should not fail on unseen bad values, conversion is a documented cleaning step|Raw layer should not fail on unseen bad values; conversion is a documented cleaning step|
-|---|---|---|---|---|
+|2026-10-12|How to type `order_date`, `order_time`, and `is_repeat_customer` in the raw sales table|Sample row shows clean values, but only one row was inspected|Load as TEXT. Convert and validate during cleaning.|Raw layer should not fail on unseen bad values, conversion is a documented cleaning step|
+| 2026-10-12 | How to type columns in raw.dataset_statistics | Full file has one row, all values visible; `$`, `%` and a date-range string appear in some columns | Plain numeric columns typed NUMERIC; columns with `$`, `%` or a range string loaded as TEXT and converted during validation | Numeric typing would fail on symbols; the raw layer should not alter values |
+| 2026-10-13 | Should the 87 repeated (order_id, product_id) pairs be removed? | No pair is an exact copy; unit_price is stable; even the closest pair differs by more than 3 in several money columns | Keep all rows in order_items; treat grain as one row per order line, not unique per (order_id, product_id) | Removing rows would delete real differences; cause of repetition is unproven, so revisit if reconciliation against the sales table disagrees |
