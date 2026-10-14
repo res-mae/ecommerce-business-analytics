@@ -44,22 +44,6 @@ CREATE TABLE raw.order_items (
 	profit NUMERIC
 );
 
--- Source: data/raw/order_items.csv
-CREATE TABLE raw.order_items (
-	order_id TEXT,
-	product_id TEXT,
-	quantity NUMERIC,
-	unit_price NUMERIC,
-	discount_percentage NUMERIC,
-	discount_amount NUMERIC,
-	gross_sales NUMERIC,
-	tax_amount NUMERIC,
-	shipping_cost NUMERIC,
-	net_sales NUMERIC,
-	product_cost NUMERIC,
-	profit NUMERIC
-);
-
 -- Source: data/raw/ecommerce_sales_customer_analytics_150k.csv
 CREATE TABLE raw.ecommerce_sales_customer_analytics_150k (
 	order_id TEXT,
