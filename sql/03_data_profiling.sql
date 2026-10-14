@@ -741,6 +741,68 @@ SELECT
 FROM raw.customer_master
 GROUP BY region
 
+/*
+=================================================
+product catalog
+=================================================
+*/
+
+-- Casing and whitespace variants in categorical columns
+-- Result: distinct_values = distinct_normalized for all 4 columns
+-- (brand 144, product_category 15, product_subcategory 117, supplier 10), so no casing or spacing variants
+SELECT 
+	'product_category' AS column_name,
+	COUNT(DISTINCT product_category) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(product_category))) AS distinct_normalized
+FROM raw.product_catalog
+UNION ALL
+SELECT 
+	'product_subcategory' AS column_name,
+	COUNT(DISTINCT product_subcategory) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(product_subcategory))) AS distinct_normalized
+FROM raw.product_catalog
+UNION ALL
+SELECT 
+	'brand' AS column_name,
+	COUNT(DISTINCT brand) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(brand))) AS distinct_normalized
+FROM raw.product_catalog
+UNION ALL
+SELECT 
+	'supplier' AS column_name,
+	COUNT(DISTINCT supplier) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(supplier))) AS distinct_normalized
+FROM raw.product_catalog
+ORDER BY column_name;
+
+-- Distinct values with counts for product_category and supplier
+-- Result: 15 categories and 10 suppliers skimmed. No spelling variants or out-of-place values found.
+SELECT
+	'product_category' AS column_name,
+	product_category AS value,
+	COUNT(*) AS row_count
+FROM raw.product_catalog
+GROUP BY product_category
+UNION ALL
+SELECT
+	'supplier' AS column_name,
+	supplier AS value,
+	COUNT(*) AS row_count
+FROM raw.product_catalog
+GROUP BY supplier
+ORDER BY column_name, 
+		row_count DESC;	
+
+-- Which categories do the shared subcategories appear under?
+-- Result: Storage (Home & Kitchen, Office Supplies), Watches (Fashion, Jewelry),
+-- Furniture (Baby & Kids, Home & Kitchen). Pairings look plausible (skimmed).
+SELECT 
+	product_subcategory,
+	STRING_AGG(DISTINCT product_category, ', ') AS categories
+FROM raw.product_catalog
+GROUP BY product_subcategory
+HAVING COUNT(DISTINCT product_category) > 1
+ORDER BY category_count DESC;
 
 /*
 =================================================
