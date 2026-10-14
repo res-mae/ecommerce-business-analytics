@@ -1,10 +1,19 @@
--- STEP 1: STRUCTURE AND VOLUME
+/*
+=================================================
+    STEP 1: STRUCTURE AND VOLUME
+=================================================
+
 -- Completed during raw loading (see docs/data_quality_log.md).
 -- Row counts: product_catalog 1,175 | customer_master 25,000 |
 --             order_items 397,569 | sales 138,116 | dataset_statistics 1
 
+*/
 
--- STEP 2: GRAIN AND KEYS
+/*
+=================================================
+    STEP 2: GRAIN AND KEYS
+=================================================
+*/
 -- product_catalog: is product_id unique? 
 -- Result: 1,175 rows, 1,175 distinct product_id -> unique
 SELECT
@@ -34,8 +43,12 @@ SELECT
 	COUNT(DISTINCT order_id) AS distinct_orders
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
--- STEP 2b: ORDER_ITEMS REPEATED PAIRS
--- order_items: surplus (order_id, product_id) pairs
+/*
+=================================================
+    STEP 2b: ORDER_ITEMS REPEATED PAIRS
+=================================================
+*/
+-- Surplus (order_id, product_id) pairs
 -- Result: rows_per_pair = 2, 87 repeated pairs, 87 surplus rows (reconciles with the gap)
 WITH pair AS (
     SELECT
@@ -54,7 +67,7 @@ FROM pair
 GROUP BY rows_per_pair
 ORDER BY rows_per_pair;
 
--- order_items: how many of the pairs are fully identical?
+-- How many of the pairs are fully identical?
 -- Result: distinct_entries = 2 for all 87 pairs -> none are exact copies
 WITH pair AS (
 	SELECT
@@ -84,7 +97,7 @@ FROM pair
 GROUP BY distinct_entries
 ORDER BY pair_count DESC;
 
--- order_items: which columns differ on each pair?
+-- Which columns differ on each pair?
 -- from a 5-pair sample
 -- Result: in the sample, unit_price is the same; quantity, discount and the other money columns differ
 WITH pair AS (
@@ -102,7 +115,7 @@ INNER JOIN raw.order_items AS o
 ORDER BY p.order_id, p.product_id
 LIMIT 10;
 
--- order_items: how do the columns differ?
+-- How do the columns differ?
 -- Result (quantity / unit_price / discount_pct differs -> pairs):
 -- yes/no/yes -> 69 | no/no/yes -> 15 | yes/no/no -> 2 | no/no/no -> 1  (total 87)
 WITH pair AS (
@@ -127,7 +140,7 @@ GROUP BY is_quantity_distinct,
 		is_discount_pct_distinct
 ORDER BY COUNT(*) DESC;
 
--- order_items: Check one pair having the same quantity, unit_price, and discount_percentage
+-- Check one pair having the same quantity, unit_price, and discount_percentage
 -- Result: 2 rows; tax_amount, shipping_cost, net_sales and profit differ by more than 3 each
 WITH pair AS (
 	SELECT
@@ -148,17 +161,31 @@ WHERE NOT is_quantity_distinct
 	AND NOT is_unit_price_distinct
 	AND NOT is_discount_pct_distinct;
 
--- order_items: how many rows have gross_sales different from quantity * unit_price?
--- Result: 0 -> gross_sales is consistent across all 397,569 rows
-SELECT 
-	COUNT(*)
-FROM raw.order_items
-WHERE ROUND(gross_sales,2) IS DISTINCT FROM ROUND(quantity * unit_price, 2);
+/*
+=================================================
+    STEP 3: COMPLETENESS
+=================================================
+*/
 
+/*
+=================================================
+ecommerce_sales_customer_analytics_150k
+=================================================
+*/
 
--- STEP 3: COMPLETENESS
--- ecommerce_sales_customer_analytics_150k: which columns contain NULLs and how many each?
--- generated from information_schema.columns
+-- Which columns contain NULLs and how many each?
+-- Result (138,116 rows; 37 other columns have 0 NULLs):
+-- delivery_days            24,557 (17.8%)
+-- estimated_delivery_days  24,557 (17.8%)
+-- customer_rating          24,557 (17.8%)
+-- review_sentiment         24,557 (17.8%)
+-- customer_review          24,557 (17.8%)
+-- return_status           128,654 (93.1%)
+-- return_reason           128,654 (93.1%)
+-- campaign_name            83,233 (60.3%)
+-- coupon_code             110,502 (80.0%)
+
+-- generated from information_schema.columns for the query for below
 SELECT
     'SELECT ' ||
     string_agg(
@@ -174,16 +201,6 @@ FROM information_schema.columns
 WHERE table_schema = 'raw'
   AND table_name = 'ecommerce_sales_customer_analytics_150k';
 
--- Result (138,116 rows; 37 other columns have 0 NULLs):
--- delivery_days            24,557 (17.8%)
--- estimated_delivery_days  24,557 (17.8%)
--- customer_rating          24,557 (17.8%)
--- review_sentiment         24,557 (17.8%)
--- customer_review          24,557 (17.8%)
--- return_status           128,654 (93.1%)
--- return_reason           128,654 (93.1%)
--- campaign_name            83,233 (60.3%)
--- coupon_code             110,502 (80.0%)
 SELECT 
 	COUNT(*) FILTER (WHERE order_id IS NULL) AS order_id_nulls, 
 	COUNT(*) FILTER (WHERE order_date IS NULL) AS order_date_nulls, 
@@ -233,7 +250,7 @@ SELECT
 	COUNT(*) FILTER (WHERE customer_order_count IS NULL) AS customer_order_count_nulls 
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
--- ecommerce_sales_customer_analytics_150k: Do the five 24,557-NULL columns go missing on the same rows? 
+-- Do the five 24,557-NULL columns go missing on the same rows? 
 -- delivery_days, estimated_delivery_days, customer_rating, review_sentiment, customer_review
 -- Result: 24,557
 SELECT
@@ -245,7 +262,7 @@ WHERE delivery_days IS NULL AND
 	review_sentiment IS NULL AND
 	customer_review IS NULL;
 
--- ecommerce_sales_customer_analytics_150k: for those 24,557 rows, how do they distribute across order_status and delivery_status?
+-- For those 24,557 rows, how do they distribute across order_status and delivery_status?
 -- Result (pct = % of all 138,116 rows): 
 -- delivery_status | order_status | rows   | pct
 -- Cancelled       | Cancelled    | 8,398  | 6.08
@@ -270,7 +287,7 @@ GROUP BY
 	order_status
 ORDER BY total_rows DESC;
 
--- ecommerce_sales_customer_analytics_150k: Whole-table counts for each delivery_status.
+-- Whole-table counts for each delivery_status.
 -- Result: On Time 86,916 | Cancelled 24,557 | Delayed 16,886 | Early 9,757 (total 138,116)
 SELECT 
 	delivery_status,
@@ -279,7 +296,7 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY delivery_status
 ORDER BY COUNT(*) DESC;
 
--- ecommerce_sales_customer_analytics_150k: Whole-table counts for each order_status.
+-- Whole-table counts for each order_status.
 -- Result: Completed 113,559 | Returned 9,462 | Cancelled 8,398 | Pending 6,697 (total 138,116)
 SELECT 
 	order_status,
@@ -288,7 +305,7 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY order_status
 ORDER BY COUNT(*) DESC;
 
--- ecommerce_sales_customer_analytics_150k: Whole-table counts for each order_status and each delivery_status.
+-- Whole-table counts for each order_status and each delivery_status.
 -- Result: Completed -> On Time 86,916 | Delayed 16,886 | Early 9,757
 --         Returned, Cancelled, Pending -> always delivery_status Cancelled (9,462 | 8,398 | 6,697)
 SELECT 
@@ -299,7 +316,7 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY delivery_status, order_status
 ORDER BY COUNT(*) DESC;
 
--- ecommerce_sales_customer_analytics_150k: Are return_status and return_reason filled only for Returned orders?
+-- Are return_status and return_reason filled only for Returned orders?
 -- Result: only Returned orders (9,462) have return_status and return_reason filled; 0 rows with only one filled; 0 blank strings
 SELECT
     order_status,
@@ -312,7 +329,7 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY order_status
 ORDER BY total_rows DESC;
 
--- ecommerce_sales_customer_analytics_150k: Does the coupon_code NULL rate differ between rows with and without a campaign_name?
+-- Does the coupon_code NULL rate differ between rows with and without a campaign_name?
 -- Result: coupon_code NULL rate is 79.72% with a campaign (54,883 rows) and 80.19% without (83,233 rows)
 -- -> the two columns look independent
 SELECT
@@ -326,8 +343,11 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY campaign_name IS NULL
 ORDER BY campaign_is_null;
 
--- ecommerce_sales_customer_analytics_150k: Check for blanks and placeholders in text columns
--- generated from information_schema.columns
+-- Check for blanks and placeholders in text columns
+-- Result: 0 matches in all 29 text columns for empty or whitespace-only strings
+-- and for N/A, NA, NULL, UNKNOWN, NONE (case-insensitive, whole value only).
+
+-- generated from information_schema.columns for the query below
 SELECT 
 	'SELECT ' ||
 	string_agg (
@@ -345,8 +365,6 @@ WHERE table_schema = 'raw'
 	AND table_name = 'ecommerce_sales_customer_analytics_150k'
 	AND data_type = 'text';
 
--- Result: 0 matches in all 29 text columns for empty or whitespace-only strings
--- and for N/A, NA, NULL, UNKNOWN, NONE (case-insensitive, whole value only).
 SELECT 
 	COUNT(*) FILTER (WHERE order_id ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS order_id_invalid, 
 	COUNT(*) FILTER (WHERE order_date ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS order_date_invalid, 
@@ -379,7 +397,150 @@ SELECT
 	COUNT(*) FILTER (WHERE is_repeat_customer ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS is_repeat_customer_invalid 
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
--- ecommerce_sales_customer_analytics_150k: Casing variants, spelling inconsistencies, or values that don't fit
+/*
+==========================================================
+customer_master
+==========================================================
+*/
+
+-- Which columns contain NULLs and how many each?
+-- Result: 0 NULLs in all 11 columns (25,000 rows)
+SELECT  
+	COUNT(*) FILTER (WHERE customer_id IS NULL) AS customer_id_nulls, 
+	COUNT(*) FILTER (WHERE customer_name IS NULL) AS customer_name_nulls, 
+	COUNT(*) FILTER (WHERE customer_age IS NULL) AS customer_age_nulls, 
+	COUNT(*) FILTER (WHERE gender IS NULL) AS gender_nulls, 
+	COUNT(*) FILTER (WHERE customer_segment IS NULL) AS customer_segment_nulls, 
+	COUNT(*) FILTER (WHERE customer_city IS NULL) AS customer_city_nulls, 
+	COUNT(*) FILTER (WHERE customer_state IS NULL) AS customer_state_nulls, 
+	COUNT(*) FILTER (WHERE customer_country IS NULL) AS customer_country_nulls, 
+	COUNT(*) FILTER (WHERE region IS NULL) AS region_nulls, 
+	COUNT(*) FILTER (WHERE customer_postal_code IS NULL) AS customer_postal_code_nulls, 
+	COUNT(*) FILTER (WHERE customer_acquisition_cost IS NULL) AS customer_acquisition_cost_nulls 
+FROM raw.customer_master;
+
+-- Check for blanks and placeholders in text columns
+-- Result: 0 matches in all 9 text columns (empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE)
+SELECT 
+	COUNT(*) FILTER (WHERE customer_id ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS customer_id_invalid, 
+	COUNT(*) FILTER (WHERE customer_name ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS customer_name_invalid, 
+	COUNT(*) FILTER (WHERE gender ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS gender_invalid, 
+	COUNT(*) FILTER (WHERE customer_segment ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS customer_segment_invalid, 
+	COUNT(*) FILTER (WHERE customer_city ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS customer_city_invalid, 
+	COUNT(*) FILTER (WHERE customer_state ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS customer_state_invalid, 
+	COUNT(*) FILTER (WHERE customer_country ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS customer_country_invalid, 
+	COUNT(*) FILTER (WHERE region ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS region_invalid, 
+	COUNT(*) FILTER (WHERE customer_postal_code ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS customer_postal_code_invalid 
+FROM raw.customer_master;
+
+/*
+==========================================================
+product_catalog
+==========================================================
+*/
+
+-- Which columns contain NULLs and how many each?
+-- Result: 0 NULLs in all 9 columns (1,175 rows)
+SELECT 
+	COUNT(*) FILTER (WHERE product_id IS NULL) AS product_id_nulls, 
+	COUNT(*) FILTER (WHERE product_name IS NULL) AS product_name_nulls, 
+	COUNT(*) FILTER (WHERE product_category IS NULL) AS product_category_nulls, 
+	COUNT(*) FILTER (WHERE product_subcategory IS NULL) AS product_subcategory_nulls, 
+	COUNT(*) FILTER (WHERE brand IS NULL) AS brand_nulls, 
+	COUNT(*) FILTER (WHERE supplier IS NULL) AS supplier_nulls, 
+	COUNT(*) FILTER (WHERE unit_price IS NULL) AS unit_price_nulls, 
+	COUNT(*) FILTER (WHERE product_cost IS NULL) AS product_cost_nulls, 
+	COUNT(*) FILTER (WHERE product_rating IS NULL) AS product_rating_nulls 
+FROM raw.product_catalog;
+
+-- Check for blanks and placeholders in text columns
+-- Result: 0 matches in all 6 text columns (empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE)
+SELECT 
+	COUNT(*) FILTER (WHERE product_id ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS product_id_invalid, 
+	COUNT(*) FILTER (WHERE product_name ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS product_name_invalid, 
+	COUNT(*) FILTER (WHERE product_category ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS product_category_invalid, 
+	COUNT(*) FILTER (WHERE product_subcategory ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS product_subcategory_invalid, 
+	COUNT(*) FILTER (WHERE brand ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS brand_invalid, 
+	COUNT(*) FILTER (WHERE supplier ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS supplier_invalid 
+FROM raw.product_catalog;
+
+/*
+==========================================================
+order_items
+==========================================================
+*/
+
+-- Which columns contain NULLs and how many each?
+-- Result: 0 NULLs in all 12 columns (397,569 rows)
+SELECT 
+	COUNT(*) FILTER (WHERE order_id IS NULL) AS order_id_nulls, 
+	COUNT(*) FILTER (WHERE product_id IS NULL) AS product_id_nulls, 
+	COUNT(*) FILTER (WHERE quantity IS NULL) AS quantity_nulls, 
+	COUNT(*) FILTER (WHERE unit_price IS NULL) AS unit_price_nulls, 
+	COUNT(*) FILTER (WHERE discount_percentage IS NULL) AS discount_percentage_nulls, 
+	COUNT(*) FILTER (WHERE discount_amount IS NULL) AS discount_amount_nulls, 
+	COUNT(*) FILTER (WHERE gross_sales IS NULL) AS gross_sales_nulls, 
+	COUNT(*) FILTER (WHERE tax_amount IS NULL) AS tax_amount_nulls, 
+	COUNT(*) FILTER (WHERE shipping_cost IS NULL) AS shipping_cost_nulls, 
+	COUNT(*) FILTER (WHERE net_sales IS NULL) AS net_sales_nulls, 
+	COUNT(*) FILTER (WHERE product_cost IS NULL) AS product_cost_nulls, 
+	COUNT(*) FILTER (WHERE profit IS NULL) AS profit_nulls 
+FROM raw.order_items;
+
+-- Check for blanks and placeholders in text columns
+-- Result: 0 matches in order_id and product_id (empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE)
+SELECT 
+	COUNT(*) FILTER (WHERE order_id ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS order_id_invalid, 
+	COUNT(*) FILTER (WHERE product_id ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS product_id_invalid 
+FROM raw.order_items;
+
+/*
+==========================================================
+dataset_statistics
+==========================================================
+*/
+
+-- Which columns contain NULLs and how many each?
+-- Result: 0 NULLs in all 11 columns (1 row)
+SELECT 
+	COUNT(*) FILTER (WHERE total_transactions IS NULL) AS total_transactions_nulls, 
+	COUNT(*) FILTER (WHERE total_columns IS NULL) AS total_columns_nulls, 
+	COUNT(*) FILTER (WHERE total_customers IS NULL) AS total_customers_nulls, 
+	COUNT(*) FILTER (WHERE total_products_used IS NULL) AS total_products_used_nulls, 
+	COUNT(*) FILTER (WHERE date_range IS NULL) AS date_range_nulls, 
+	COUNT(*) FILTER (WHERE total_revenue IS NULL) AS total_revenue_nulls, 
+	COUNT(*) FILTER (WHERE total_profit IS NULL) AS total_profit_nulls, 
+	COUNT(*) FILTER (WHERE average_order_value IS NULL) AS average_order_value_nulls, 
+	COUNT(*) FILTER (WHERE average_rating IS NULL) AS average_rating_nulls, 
+	COUNT(*) FILTER (WHERE return_rate IS NULL) AS return_rate_nulls, 
+	COUNT(*) FILTER (WHERE cancellation_rate IS NULL) AS cancellation_rate_nulls 
+FROM raw.dataset_statistics;
+
+-- Check for blanks and placeholders in text columns
+-- Result: 0 matches in all 6 text columns (empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE)
+SELECT 
+	COUNT(*) FILTER (WHERE date_range ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS date_range_invalid, 
+	COUNT(*) FILTER (WHERE total_revenue ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS total_revenue_invalid, 
+	COUNT(*) FILTER (WHERE total_profit ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS total_profit_invalid, 
+	COUNT(*) FILTER (WHERE average_order_value ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS average_order_value_invalid, 
+	COUNT(*) FILTER (WHERE return_rate ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS return_rate_invalid, 
+	COUNT(*) FILTER (WHERE cancellation_rate ~* E'^\\s*$|^\\s*(N/A|NA|NULL|UNKNOWN|NONE)\\s*$') AS cancellation_rate_invalid 
+FROM raw.dataset_statistics;
+
+
+/*
+=================================================
+    STEP 4: VALIDITY
+=================================================
+*/
+
+/*
+=================================================
+ecommerce_sales_customer_analytics_150k
+=================================================
+*/
+
+-- Casing variants, spelling inconsistencies, or values that don't fit
 -- Result: 91 distinct values across 16 categorical columns.
 -- Skimmed for casing variants, spelling differences, tiny groups and values that don't fit the column.
 -- None found. review_sentiment has a NULL group (24,557 rows) from non-Completed orders.
@@ -495,3 +656,107 @@ SELECT
 FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY is_repeat_customer
 ORDER BY column_name, row_count DESC;
+
+/*
+=================================================
+customer_master
+=================================================
+*/
+
+-- Casing and whitespace variants in categorical columns
+-- Result: distinct_values = distinct_normalized for all 6 columns (gender, customer_segment,
+-- customer_city, customer_state, customer_country, region), so no casing or spacing variants
+SELECT
+	'gender' AS column_name,
+	COUNT(DISTINCT gender) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(gender))) AS distinct_normalized
+FROM raw.customer_master
+UNION ALL
+SELECT
+	'customer_segment' AS column_name,
+	COUNT(DISTINCT customer_segment) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(customer_segment))) AS distinct_normalized
+FROM raw.customer_master
+UNION ALL
+SELECT
+	'customer_city' AS column_name,
+	COUNT(DISTINCT customer_city) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(customer_city))) AS distinct_normalized
+FROM raw.customer_master
+UNION ALL
+SELECT
+	'customer_state' AS column_name,
+	COUNT(DISTINCT customer_state) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(customer_state))) AS distinct_normalized
+FROM raw.customer_master
+UNION ALL
+SELECT
+	'customer_country' AS column_name,
+	COUNT(DISTINCT customer_country) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(customer_country))) AS distinct_normalized
+FROM raw.customer_master
+UNION ALL
+SELECT
+	'region' AS column_name,
+	COUNT(DISTINCT region) AS distinct_values,
+	COUNT(DISTINCT LOWER(TRIM(region))) AS distinct_normalized
+FROM raw.customer_master
+ORDER BY column_name;
+
+-- Distinct values with counts for low-cardinality columns
+-- Result: gender, customer_segment, customer_state, customer_country and region skimmed.
+-- No casing or spelling variants, tiny groups or out-of-place values found.
+SELECT 
+	'gender' AS column_name,
+	gender AS value,
+	COUNT(*) AS row_count 
+FROM raw.customer_master
+GROUP BY gender
+UNION ALL
+SELECT 
+	'customer_segment' AS column_name,
+	customer_segment AS value,
+	COUNT(*) AS row_count 
+FROM raw.customer_master
+GROUP BY customer_segment
+UNION ALL
+SELECT 
+	'customer_state' AS column_name,
+	customer_state AS value,
+	COUNT(*) AS row_count 
+FROM raw.customer_master
+GROUP BY customer_state
+UNION ALL
+SELECT 
+	'customer_country' AS column_name,
+	customer_country AS value,
+	COUNT(*) AS row_count 
+FROM raw.customer_master
+GROUP BY customer_country
+UNION ALL
+SELECT 
+	'region' AS column_name,
+	region AS value,
+	COUNT(*) AS row_count 
+FROM raw.customer_master
+GROUP BY region
+
+
+/*
+=================================================
+    STEP 5: VALIDITY
+=================================================
+*/
+
+/*
+=================================================
+customer_master
+=================================================
+*/
+
+-- How many rows have gross_sales different from quantity * unit_price?
+-- Result: 0 -> gross_sales is consistent across all 397,569 rows
+SELECT 
+	COUNT(*)
+FROM raw.order_items
+WHERE ROUND(gross_sales,2) IS DISTINCT FROM ROUND(quantity * unit_price, 2);
