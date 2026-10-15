@@ -22,6 +22,9 @@
 | Do status fields make business sense? | All 9,462 Returned and all 6,697 Pending orders have delivery_status = 'Cancelled' and no delivery days. A return normally follows a delivery (observation, cause unknown). | Use delivery_status and delivery_days only for Completed orders. Do not analyze returns against delivery delay. | Complete |
 | Numeric ranges (17 numeric columns) | No impossible values. Age 18 to 74, quantity 1 to 24, rating 1.6 to 5.0, all money columns positive except profit (1,296 negative rows, min -1,281.59) and profit_margin_percentage (1,295 negative, 1 zero from a -0.01 profit rounding). Zeros in delivery, discount, shipping and loyalty-point columns. All non-Completed orders earn 0 loyalty points. | Keep all values. Negative profit is plausible as real losses, to be confirmed in Step 5. | Complete |
 | Date and time validity | All order_date values match YYYY-MM-DD and all order_time values HH:MM:SS (0 mismatches). Casts to DATE and TIME succeed for all rows. order_date runs 2021-01-01 to 2025-12-31, matching dataset_statistics. | Convert to DATE and TIME in the analytics layer. | Complete |
+| Does net_sales = gross_sales - discount_amount + tax_amount + shipping_cost? | Yes for all 138,116 rows (0 mismatches at 2 decimals). net_sales includes tax and shipping. | None needed. Decide later whether Total Sales means net_sales or gross_sales minus discount. | Complete |
+| Does profit = net_sales - product_cost - shipping_cost? | Yes for all 138,116 rows (0 mismatches, max gap is floating-point noise). Equivalent to gross_sales - discount_amount + tax_amount - product_cost, so profit includes tax. | Use profit as given for now. Decide in the analytics layer whether to recompute profit excluding tax. | Complete |
+| Does profit_margin_percentage = profit / net_sales * 100? | Yes for all 138,116 rows. One row differs only by a rounding tie (stored 26.67, recomputed 26.675). | None needed. | Complete |
 
 ## raw.order_items
 

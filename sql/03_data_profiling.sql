@@ -1334,6 +1334,65 @@ FROM raw.order_items;
 
 /*
 =================================================
+ecommerce_sales_customer_analytics_150k
+=================================================
+*/
+
+-- ecommerce_sales_customer_analytics_150k
+-- Does net_sales = gross_sales - discount_amount + tax_amount + shipping_cost (2 decimals)?
+-- Result: 0 mismatches across 138,116 rows.
+SELECT
+	COUNT(*) AS total_rows,
+	COUNT(*) FILTER (WHERE
+		ROUND(net_sales, 2) IS DISTINCT FROM
+		ROUND(gross_sales - discount_amount + tax_amount + shipping_cost, 2)
+	) AS net_sales_mismatches
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Largest absolute gap between net_sales and gross_sales - discount_amount + tax_amount + shipping_cost
+-- Result: 0.000000000004197 (floating-point noise), so the formula holds exactly.
+SELECT
+	MAX(ABS(net_sales - (gross_sales - discount_amount + tax_amount + shipping_cost)))
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Does profit = net_sales - product_cost - shipping_cost (2 decimals)?
+-- Result: 0 mismatches across 138,116 rows. Max absolute gap 0.0000000000025 (floating-point noise).
+-- Equivalent to gross_sales - discount_amount + tax_amount - product_cost, so profit includes tax.
+SELECT
+	COUNT(*) AS total_rows,
+	COUNT(*) FILTER (WHERE
+		ROUND(profit, 2) IS DISTINCT FROM
+		ROUND(net_sales - product_cost - shipping_cost, 2)
+	) AS profit_mismatches
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+SELECT MAX(ABS(profit - (net_sales - product_cost - shipping_cost)))
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Does profit_margin_percentage = profit / net_sales * 100 (2 decimals)?
+-- Result: 1 mismatch in 138,116 rows. Stored 26.67 vs recomputed 26.675, a rounding tie.
+-- Max absolute gap 0.005, consistent with 2-decimal rounding.
+SELECT
+	COUNT(*) AS total_rows,
+	COUNT(*) FILTER (WHERE
+		ROUND(profit_margin_percentage, 2) IS DISTINCT FROM
+		ROUND(profit / net_sales * 100.0, 2)
+	) AS profit_mismatches
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+SELECT MAX(ABS(profit_margin_percentage - (profit / net_sales * 100.0)))
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+SELECT order_id, profit, net_sales, profit_margin_percentage,
+       profit / net_sales * 100.0 AS recomputed
+FROM raw.ecommerce_sales_customer_analytics_150k
+WHERE ROUND(profit_margin_percentage, 2) IS DISTINCT FROM ROUND(profit / net_sales * 100.0, 2);
+
+/*
+=================================================
 customer_master
 =================================================
 */
