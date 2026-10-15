@@ -36,6 +36,9 @@
 | Does gross_sales = quantity * unit_price (rounded to 2 dp)? | Yes for all 397,569 rows. 0 mismatches (NULL-safe check using IS DISTINCT FROM). | None needed. gross_sales is consistent with quantity and unit_price. | Complete |
 | NULLs, blanks and placeholders | 0 NULLs in all 12 columns. 0 matches in the 2 text columns (order_id, product_id) for empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE. | None needed. | Complete |
 | Numeric ranges (10 numeric columns) | No impossible values. Quantity 1 to 5, prices and sales amounts positive. Negative profit in 5,426 rows. discount_percentage is a fraction (0 to 0.6). 33 rows have a non-zero discount_percentage but a zero discount_amount. | Keep all values. Check profit and discount consistency in Step 5. | Complete |
+| Does net_sales = gross_sales - discount_amount + tax_amount + shipping_cost? | Yes for all 397,569 rows (0 mismatches, max gap is floating-point noise). | None needed. | Complete |
+| Does profit = net_sales - product_cost - shipping_cost? | Yes for all 397,569 rows (0 mismatches, max gap is floating-point noise). Same formula as the sales table, so profit includes tax. | Use profit as given for now. Decide in the analytics layer whether to recompute profit excluding tax. | Complete |
+| Does discount_amount = gross_sales * discount_percentage? | Yes for all 397,569 rows at 2 decimals. Max gap 0.005, consistent with rounding. 33 rows have a non-zero discount_percentage but a zero discount_amount, all explained by rounding (largest unrounded discount 0.00496). | None needed. discount_percentage can be used as given. | Complete |
 
 ## raw.customer_master
 

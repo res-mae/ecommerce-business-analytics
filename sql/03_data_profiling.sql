@@ -1368,7 +1368,8 @@ SELECT
 	) AS profit_mismatches
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
-SELECT MAX(ABS(profit - (net_sales - product_cost - shipping_cost)))
+SELECT 
+	MAX(ABS(profit - (net_sales - product_cost - shipping_cost)))
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
 -- ecommerce_sales_customer_analytics_150k
@@ -1383,13 +1384,74 @@ SELECT
 	) AS profit_mismatches
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
-SELECT MAX(ABS(profit_margin_percentage - (profit / net_sales * 100.0)))
+SELECT 
+	MAX(ABS(profit_margin_percentage - (profit / net_sales * 100.0)))
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
 SELECT order_id, profit, net_sales, profit_margin_percentage,
        profit / net_sales * 100.0 AS recomputed
 FROM raw.ecommerce_sales_customer_analytics_150k
 WHERE ROUND(profit_margin_percentage, 2) IS DISTINCT FROM ROUND(profit / net_sales * 100.0, 2);
+
+/*
+=================================================
+order_items
+=================================================
+*/
+
+-- order_items
+-- Does net_sales = gross_sales - discount_amount + tax_amount + shipping_cost (2 decimals)?
+-- Result: 0 mismatches across 397,569 rows. Max absolute gap 0.000000000000003 (floating-point noise).
+SELECT
+	COUNT(*) AS total_rows,
+	COUNT(*) FILTER (WHERE
+		ROUND(net_sales, 2) IS DISTINCT FROM
+		ROUND(gross_sales - discount_amount + tax_amount + shipping_cost, 2)
+	) AS net_sales_mismatches
+FROM raw.order_items;
+
+SELECT
+	MAX(ABS(net_sales - (gross_sales - discount_amount + tax_amount + shipping_cost)))
+FROM raw.order_items;
+
+-- order_items
+-- Does profit = net_sales - product_cost - shipping_cost (2 decimals)?
+-- Result: 0 mismatches across 397,569 rows. Max absolute gap 0.000000000000003 (floating-point noise).
+-- Equivalent to gross_sales - discount_amount + tax_amount - product_cost, so profit includes tax here too.
+SELECT
+	COUNT(*) AS total_rows,
+	COUNT(*) FILTER (WHERE
+		ROUND(profit, 2) IS DISTINCT FROM
+		ROUND(net_sales - product_cost - shipping_cost, 2)
+	) AS profit_mismatches
+FROM raw.order_items;
+
+SELECT 
+	MAX(ABS(profit - (net_sales - product_cost - shipping_cost)))
+FROM raw.order_items;
+
+-- order_items
+-- Does discount_amount = gross_sales * discount_percentage (2 decimals)?
+-- Result: 0 mismatches across 397,569 rows. Max absolute gap 0.005, consistent with 2-decimal rounding.
+SELECT
+	COUNT(*) AS total_rows,
+	COUNT(*) FILTER (WHERE
+		ROUND(discount_amount,2) IS DISTINCT FROM
+		ROUND(gross_sales * discount_percentage, 2)
+	) AS discount_mismatches
+FROM raw.order_items;
+
+SELECT
+	MAX(ABS(discount_amount - (gross_sales * discount_percentage)))
+FROM raw.order_items;
+
+-- order_items
+-- Rows with discount_percentage > 0 but discount_amount = 0
+-- Result: 33 rows. Largest unrounded discount is 0.00496 (below 0.005), so the amount rounds to 0.00.
+SELECT 
+	MAX(gross_sales * discount_percentage) AS max_unrounded_discount
+FROM raw.order_items
+WHERE discount_percentage > 0 AND discount_amount = 0;
 
 /*
 =================================================
