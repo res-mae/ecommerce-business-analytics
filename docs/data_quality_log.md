@@ -20,6 +20,8 @@
 | Blank and placeholder values in text columns | 0 matches in all 29 text columns for empty or whitespace-only strings and for N/A, NA, NULL, UNKNOWN, NONE. | None needed. | Complete |
 | Casing, spelling and out-of-place values in categorical columns | 16 categorical columns reviewed by skimming distinct values with counts (91 values). No casing variants, typos or out-of-place values found. | None needed. | Complete |
 | Do status fields make business sense? | All 9,462 Returned and all 6,697 Pending orders have delivery_status = 'Cancelled' and no delivery days. A return normally follows a delivery (observation, cause unknown). | Use delivery_status and delivery_days only for Completed orders. Do not analyze returns against delivery delay. | Complete |
+| Numeric ranges (17 numeric columns) | No impossible values. Age 18 to 74, quantity 1 to 24, rating 1.6 to 5.0, all money columns positive except profit (1,296 negative rows, min -1,281.59) and profit_margin_percentage (1,295 negative, 1 zero from a -0.01 profit rounding). Zeros in delivery, discount, shipping and loyalty-point columns. All non-Completed orders earn 0 loyalty points. | Keep all values. Negative profit is plausible as real losses, to be confirmed in Step 5. | Complete |
+| Date and time validity | All order_date values match YYYY-MM-DD and all order_time values HH:MM:SS (0 mismatches). Casts to DATE and TIME succeed for all rows. order_date runs 2021-01-01 to 2025-12-31, matching dataset_statistics. | Convert to DATE and TIME in the analytics layer. | Complete |
 
 ## raw.order_items
 
@@ -30,6 +32,7 @@
 | Why do 87 (order_id, product_id) pairs repeat? | All 87 pairs appear exactly twice and none are identical rows. unit_price is the same within every pair. quantity differs in 71 pairs, discount_percentage in 84. The 1 pair matching on quantity, unit_price and discount_percentage still differs by more than 3 in tax_amount, shipping_cost, net_sales and profit. | Not duplicates. Keep all rows. Cause of repetition unknown (likely separate lines, not proven). | Complete |
 | Does gross_sales = quantity * unit_price (rounded to 2 dp)? | Yes for all 397,569 rows. 0 mismatches (NULL-safe check using IS DISTINCT FROM). | None needed. gross_sales is consistent with quantity and unit_price. | Complete |
 | NULLs, blanks and placeholders | 0 NULLs in all 12 columns. 0 matches in the 2 text columns (order_id, product_id) for empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE. | None needed. | Complete |
+| Numeric ranges (10 numeric columns) | No impossible values. Quantity 1 to 5, prices and sales amounts positive. Negative profit in 5,426 rows. discount_percentage is a fraction (0 to 0.6). 33 rows have a non-zero discount_percentage but a zero discount_amount. | Keep all values. Check profit and discount consistency in Step 5. | Complete |
 
 ## raw.customer_master
 
@@ -39,6 +42,7 @@
 | NULL counts per column (11 columns) | 0 NULLs in all 11 columns (25,000 rows) | None needed. | Complete |
 | Blank and placeholder values in text columns | 0 matches in all 9 text columns for empty or whitespace-only strings and for N/A, NA, NULL, UNKNOWN, NONE | None needed. | Complete |
 | Casing, spacing and out-of-place values in categorical columns | No casing or spacing variants in 6 columns (gender, customer_segment, customer_city, customer_state, customer_country, region). Value lists for gender, customer_segment, customer_state, customer_country and region skimmed, with no spelling problems or out-of-place values found. | None needed. | Complete |
+| Numeric ranges (2 numeric columns) | No impossible values. customer_age 18 to 74, customer_acquisition_cost 5.01 to 79.99, no zeros or negatives. | None needed. | Complete |
 
 ## raw.product_catalog
 
@@ -48,6 +52,7 @@
 | NULLs, blanks and placeholders | 0 NULLs in all 9 columns. 0 matches in the 6 text columns for empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE. | None needed. | Complete |
 | Casing, spacing and out-of-place values in categorical columns | No casing or spacing variants in brand (144 values), product_category (15), product_subcategory (117) and supplier (10). Value lists for product_category and supplier skimmed, with no spelling problems or out-of-place values found. | None needed. | Complete |
 | Does each product_subcategory belong to one product_category? | 117 distinct subcategories but 120 distinct category/subcategory pairs. Storage (Home & Kitchen, Office Supplies), Watches (Fashion, Jewelry) and Furniture (Baby & Kids, Home & Kitchen) each appear under 2 categories. Pairings look plausible on a skim. | Subcategory alone is not a valid key. Always group by category and subcategory together. | Complete |
+| Numeric ranges (3 numeric columns) | No impossible values. unit_price 6.31 to 1,482.95, product_cost 1.97 to 993.63, product_rating 2.5 to 4.9. No zeros or negatives. | None needed. | Complete |
 
 ## raw.dataset_statistics
 

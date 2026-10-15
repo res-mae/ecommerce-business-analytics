@@ -709,6 +709,249 @@ SELECT
 	COUNT(*) FILTER (WHERE customer_id !~ '^CUST-[0-9]{6}$') AS customer_id_mismatches
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
+-- ecommerce_sales_customer_analytics_150k
+-- Min, max, zeros and negatives for the 17 numeric columns
+-- Result: no impossible values. Negatives only in profit (1,296) and profit_margin_percentage (1,295).
+-- Zeros in delivery_days (6,674), estimated_delivery_days (5,794), discount_amount (17,864),
+-- shipping_cost (377), loyalty_points_earned (24,562), loyalty_points_redeemed (27,155).
+
+-- generated from information_schema.columns, used for the query below
+SELECT
+	string_agg(
+		format(
+			$sql$
+SELECT
+	%L AS column_name,
+	MIN(%I) AS min_value,
+	MAX(%I) AS max_value,
+	COUNT(*) FILTER (WHERE %I = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE %I < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			$sql$,
+			column_name,
+			column_name,
+			column_name,
+			column_name,
+			column_name
+		),
+E'\nUNION ALL\n'
+	) 
+FROM information_schema.columns
+WHERE table_schema = 'raw'
+	AND table_name = 'ecommerce_sales_customer_analytics_150k'
+	AND data_type = 'numeric';
+
+SELECT
+	'customer_age' AS column_name,
+	MIN(customer_age) AS min_value,
+	MAX(customer_age) AS max_value,
+	COUNT(*) FILTER (WHERE customer_age = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE customer_age < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'delivery_days' AS column_name,
+	MIN(delivery_days) AS min_value,
+	MAX(delivery_days) AS max_value,
+	COUNT(*) FILTER (WHERE delivery_days = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE delivery_days < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'estimated_delivery_days' AS column_name,
+	MIN(estimated_delivery_days) AS min_value,
+	MAX(estimated_delivery_days) AS max_value,
+	COUNT(*) FILTER (WHERE estimated_delivery_days = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE estimated_delivery_days < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'customer_rating' AS column_name,
+	MIN(customer_rating) AS min_value,
+	MAX(customer_rating) AS max_value,
+	COUNT(*) FILTER (WHERE customer_rating = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE customer_rating < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'loyalty_points_earned' AS column_name,
+	MIN(loyalty_points_earned) AS min_value,
+	MAX(loyalty_points_earned) AS max_value,
+	COUNT(*) FILTER (WHERE loyalty_points_earned = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE loyalty_points_earned < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'loyalty_points_redeemed' AS column_name,
+	MIN(loyalty_points_redeemed) AS min_value,
+	MAX(loyalty_points_redeemed) AS max_value,
+	COUNT(*) FILTER (WHERE loyalty_points_redeemed = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE loyalty_points_redeemed < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'quantity' AS column_name,
+	MIN(quantity) AS min_value,
+	MAX(quantity) AS max_value,
+	COUNT(*) FILTER (WHERE quantity = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE quantity < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'gross_sales' AS column_name,
+	MIN(gross_sales) AS min_value,
+	MAX(gross_sales) AS max_value,
+	COUNT(*) FILTER (WHERE gross_sales = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE gross_sales < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'discount_amount' AS column_name,
+	MIN(discount_amount) AS min_value,
+	MAX(discount_amount) AS max_value,
+	COUNT(*) FILTER (WHERE discount_amount = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE discount_amount < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'tax_amount' AS column_name,
+	MIN(tax_amount) AS min_value,
+	MAX(tax_amount) AS max_value,
+	COUNT(*) FILTER (WHERE tax_amount = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE tax_amount < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'shipping_cost' AS column_name,
+	MIN(shipping_cost) AS min_value,
+	MAX(shipping_cost) AS max_value,
+	COUNT(*) FILTER (WHERE shipping_cost = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE shipping_cost < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'net_sales' AS column_name,
+	MIN(net_sales) AS min_value,
+	MAX(net_sales) AS max_value,
+	COUNT(*) FILTER (WHERE net_sales = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE net_sales < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'product_cost' AS column_name,
+	MIN(product_cost) AS min_value,
+	MAX(product_cost) AS max_value,
+	COUNT(*) FILTER (WHERE product_cost = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE product_cost < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'profit' AS column_name,
+	MIN(profit) AS min_value,
+	MAX(profit) AS max_value,
+	COUNT(*) FILTER (WHERE profit = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE profit < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'profit_margin_percentage' AS column_name,
+	MIN(profit_margin_percentage) AS min_value,
+	MAX(profit_margin_percentage) AS max_value,
+	COUNT(*) FILTER (WHERE profit_margin_percentage = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE profit_margin_percentage < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'customer_lifetime_value' AS column_name,
+	MIN(customer_lifetime_value) AS min_value,
+	MAX(customer_lifetime_value) AS max_value,
+	COUNT(*) FILTER (WHERE customer_lifetime_value = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE customer_lifetime_value < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k
+			
+UNION ALL
+
+SELECT
+	'customer_order_count' AS column_name,
+	MIN(customer_order_count) AS min_value,
+	MAX(customer_order_count) AS max_value,
+	COUNT(*) FILTER (WHERE customer_order_count = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE customer_order_count < 0) AS negative_values
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Row where profit_margin_percentage = 0
+-- Result: 1 row, profit -0.01, net_sales 214.13, product_cost 214.02.
+-- Margin rounds to 0.00, so the zero is a rounding effect (explains 1,295 vs 1,296 negatives).
+SELECT
+	profit,
+	net_sales,
+	product_cost
+FROM raw.ecommerce_sales_customer_analytics_150k
+WHERE profit_margin_percentage = 0;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Zero loyalty_points_earned by order_status
+-- Result: Cancelled 8,398 | Pending 6,697 | Returned 9,462 | Completed 5.
+-- All non-Completed orders earn 0 points (24,557). 5 Completed rows also have 0.
+SELECT
+	order_status,
+	COUNT(*) FILTER (WHERE loyalty_points_earned = 0) AS zero_points_rows,
+	COUNT(*) AS total_rows
+FROM raw.ecommerce_sales_customer_analytics_150k
+GROUP BY order_status
+ORDER BY order_status;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Check order_date (YYYY-MM-DD) and order_time (HH:MM:SS) format, and date range
+-- Result: 0 format mismatches. order_date runs 2021-01-01 to 2025-12-31, matching dataset_statistics.
+SELECT
+	COUNT(*) FILTER (WHERE order_date !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$') AS date_mismatches,
+	COUNT(*) FILTER (WHERE order_time !~ '^[0-9]{2}:[0-9]{2}:[0-9]{2}$') AS time_mismatches,
+	MIN(order_date) AS min_order_date,
+	MAX(order_date) AS max_order_date
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Cast order_date to DATE and order_time to TIME
+-- Result: all casts succeed. order_date 2021-01-01 to 2025-12-31, order_time 00:00:00 to 23:59:59.
+SELECT
+	MIN(order_date::DATE) AS min_order_date,
+	MAX(order_date::DATE) AS max_order_date,
+	MIN(order_time::TIME) AS min_order_time,
+	MAX(order_time::TIME) AS max_order_time
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
 /*
 =================================================
 customer_master
@@ -813,6 +1056,27 @@ SELECT
 	COUNT(*) FILTER (WHERE customer_id !~ '^CUST-[0-9]{6}$') AS format_mismatches
 FROM raw.customer_master;
 
+-- customer_master
+-- Min, max, zeros and negatives for customer_age and customer_acquisition_cost
+-- Result: no impossible values. Age 18 to 74, acquisition cost 5.01 to 79.99, no zeros or negatives.
+SELECT
+	'customer_age' AS column_name,
+	MIN(customer_age) AS min_value,
+	MAX(customer_age) AS max_value,
+	COUNT(*) FILTER (WHERE customer_age = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE customer_age < 0) AS negative_values
+FROM raw.customer_master
+			
+UNION ALL
+
+SELECT
+	'customer_acquisition_cost' AS column_name,
+	MIN(customer_acquisition_cost) AS min_value,
+	MAX(customer_acquisition_cost) AS max_value,
+	COUNT(*) FILTER (WHERE customer_acquisition_cost = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE customer_acquisition_cost < 0) AS negative_values
+FROM raw.customer_master;
+
 /*
 =================================================
 product_catalog
@@ -896,6 +1160,38 @@ SELECT
 	COUNT(*) FILTER (WHERE product_id !~ '^PROD-[0-9]{6}$') AS format_mismatches
 FROM raw.product_catalog;
 
+-- product_catalog
+-- Min, max, zeros and negatives for unit_price, product_cost and product_rating
+-- Result: no impossible values. unit_price 6.31 to 1,482.95, product_cost 1.97 to 993.63,
+-- product_rating 2.5 to 4.9. No zeros or negatives.
+SELECT
+	'unit_price' AS column_name,
+	MIN(unit_price) AS min_value,
+	MAX(unit_price) AS max_value,
+	COUNT(*) FILTER (WHERE unit_price = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE unit_price < 0) AS negative_values
+FROM raw.product_catalog
+			
+UNION ALL
+
+SELECT
+	'product_cost' AS column_name,
+	MIN(product_cost) AS min_value,
+	MAX(product_cost) AS max_value,
+	COUNT(*) FILTER (WHERE product_cost = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE product_cost < 0) AS negative_values
+FROM raw.product_catalog
+			
+UNION ALL
+
+SELECT
+	'product_rating' AS column_name,
+	MIN(product_rating) AS min_value,
+	MAX(product_rating) AS max_value,
+	COUNT(*) FILTER (WHERE product_rating = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE product_rating < 0) AS negative_values
+FROM raw.product_catalog;
+
 /*
 =================================================
 order_items
@@ -926,6 +1222,108 @@ GROUP BY LENGTH(product_id);
 SELECT
 	COUNT(*) FILTER (WHERE order_id !~ '^ORD-[0-9]{6}$') AS order_id_mismatches,
 	COUNT(*) FILTER (WHERE product_id !~ '^PROD-[0-9]{6}$') AS product_id_mismatches
+FROM raw.order_items;
+
+-- order_items
+-- Min, max, zeros and negatives for the 10 numeric columns
+-- Result: no impossible values. Negatives only in profit (5,426). discount_percentage is a fraction (0 to 0.6).
+-- Zeros in discount_amount (51,509), discount_percentage (51,476), shipping_cost (4,505), profit (2).
+SELECT
+	'quantity' AS column_name,
+	MIN(quantity) AS min_value,
+	MAX(quantity) AS max_value,
+	COUNT(*) FILTER (WHERE quantity = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE quantity < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'unit_price' AS column_name,
+	MIN(unit_price) AS min_value,
+	MAX(unit_price) AS max_value,
+	COUNT(*) FILTER (WHERE unit_price = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE unit_price < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'discount_percentage' AS column_name,
+	MIN(discount_percentage) AS min_value,
+	MAX(discount_percentage) AS max_value,
+	COUNT(*) FILTER (WHERE discount_percentage = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE discount_percentage < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'discount_amount' AS column_name,
+	MIN(discount_amount) AS min_value,
+	MAX(discount_amount) AS max_value,
+	COUNT(*) FILTER (WHERE discount_amount = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE discount_amount < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'gross_sales' AS column_name,
+	MIN(gross_sales) AS min_value,
+	MAX(gross_sales) AS max_value,
+	COUNT(*) FILTER (WHERE gross_sales = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE gross_sales < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'tax_amount' AS column_name,
+	MIN(tax_amount) AS min_value,
+	MAX(tax_amount) AS max_value,
+	COUNT(*) FILTER (WHERE tax_amount = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE tax_amount < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'shipping_cost' AS column_name,
+	MIN(shipping_cost) AS min_value,
+	MAX(shipping_cost) AS max_value,
+	COUNT(*) FILTER (WHERE shipping_cost = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE shipping_cost < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'net_sales' AS column_name,
+	MIN(net_sales) AS min_value,
+	MAX(net_sales) AS max_value,
+	COUNT(*) FILTER (WHERE net_sales = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE net_sales < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'product_cost' AS column_name,
+	MIN(product_cost) AS min_value,
+	MAX(product_cost) AS max_value,
+	COUNT(*) FILTER (WHERE product_cost = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE product_cost < 0) AS negative_values
+FROM raw.order_items
+			
+UNION ALL
+
+SELECT
+	'profit' AS column_name,
+	MIN(profit) AS min_value,
+	MAX(profit) AS max_value,
+	COUNT(*) FILTER (WHERE profit = 0) AS zero_values,
+	COUNT(*) FILTER (WHERE profit < 0) AS negative_values
 FROM raw.order_items;
 
 /*
