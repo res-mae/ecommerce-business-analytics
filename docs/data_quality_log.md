@@ -5,6 +5,7 @@
 | Check | Finding | Decision | Status |
 |---|---|---|---|
 | Row count after import | product_catalog 1,175; customer_master 25,000; order_items 397,569; ecommerce_sales_customer_analytics_150k 138,116; dataset_statistics 1. All match the source CSV row counts | No cleaning at raw layer | Complete |
+| ID format | customer_id (CUST-XXXXXX), product_id (PROD-XXXXXX) and order_id (ORD-XXXXXX) each match a single pattern in every table where they appear, with 0 mismatches | None needed. | Complete |
 
 ## raw.ecommerce_sales_customer_analytics_150k
 

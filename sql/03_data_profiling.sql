@@ -3,9 +3,9 @@
     STEP 1: STRUCTURE AND VOLUME
 =================================================
 
--- Completed during raw loading (see docs/data_quality_log.md).
--- Row counts: product_catalog 1,175 | customer_master 25,000 |
---             order_items 397,569 | sales 138,116 | dataset_statistics 1
+Completed during raw loading (see docs/data_quality_log.md).
+Row counts: product_catalog 1,175 | customer_master 25,000 |
+            order_items 397,569 | sales 138,116 | dataset_statistics 1
 
 */
 
@@ -14,21 +14,24 @@
     STEP 2: GRAIN AND KEYS
 =================================================
 */
--- product_catalog: is product_id unique? 
+-- product_catalog 
+-- Is product_id unique? 
 -- Result: 1,175 rows, 1,175 distinct product_id -> unique
 SELECT
 	COUNT(*) AS total_rows,
 	COUNT(DISTINCT product_id) AS distinct_products
 FROM raw.product_catalog;
 
--- customer_master: is customer_id unique? 
+-- customer_master
+-- Is customer_id unique? 
 -- Result: 25,000 rows, 25,000 distinct customer_id -> unique
 SELECT
 	COUNT(*) AS total_rows,
 	COUNT(DISTINCT customer_id) AS distinct_customers
 FROM raw.customer_master;
 
--- order_items: is (order_id, product_id) unique?
+-- order_items 
+-- Is (order_id, product_id) unique?
 -- Result: 397,569 rows, 138,116 distinct order_id, 397,482 distinct pairs -> NOT unique (87 surplus rows)
 SELECT
 	COUNT(*) AS total_rows,
@@ -36,7 +39,8 @@ SELECT
 	COUNT(DISTINCT (order_id, product_id)) AS distinct_order_product_pairs
 FROM raw.order_items;
 
--- ecommerce_sales_customer_analytics_150k: is order_id unique?
+-- ecommerce_sales_customer_analytics_150k 
+-- Is order_id unique?
 -- Result: 138,116 rows, 138,116 distinct order_id -> unique
 SELECT
 	COUNT(*) AS total_rows,
@@ -45,9 +49,10 @@ FROM raw.ecommerce_sales_customer_analytics_150k;
 
 /*
 =================================================
-    STEP 2b: ORDER_ITEMS REPEATED PAIRS
+    STEP 2b: order_items REPEATED PAIRS
 =================================================
 */
+-- order_items 
 -- Surplus (order_id, product_id) pairs
 -- Result: rows_per_pair = 2, 87 repeated pairs, 87 surplus rows (reconciles with the gap)
 WITH pair AS (
@@ -67,6 +72,7 @@ FROM pair
 GROUP BY rows_per_pair
 ORDER BY rows_per_pair;
 
+-- order_items 
 -- How many of the pairs are fully identical?
 -- Result: distinct_entries = 2 for all 87 pairs -> none are exact copies
 WITH pair AS (
@@ -97,9 +103,9 @@ FROM pair
 GROUP BY distinct_entries
 ORDER BY pair_count DESC;
 
+-- order_items
 -- Which columns differ on each pair?
--- from a 5-pair sample
--- Result: in the sample, unit_price is the same; quantity, discount and the other money columns differ
+-- Result: from a 5-pair sample, unit_price is the same; quantity, discount and the other money columns differ
 WITH pair AS (
     SELECT
         order_id,
@@ -115,6 +121,7 @@ INNER JOIN raw.order_items AS o
 ORDER BY p.order_id, p.product_id
 LIMIT 10;
 
+-- order_items
 -- How do the columns differ?
 -- Result (quantity / unit_price / discount_pct differs -> pairs):
 -- yes/no/yes -> 69 | no/no/yes -> 15 | yes/no/no -> 2 | no/no/no -> 1  (total 87)
@@ -140,6 +147,7 @@ GROUP BY is_quantity_distinct,
 		is_discount_pct_distinct
 ORDER BY COUNT(*) DESC;
 
+-- order_items
 -- Check one pair having the same quantity, unit_price, and discount_percentage
 -- Result: 2 rows; tax_amount, shipping_cost, net_sales and profit differ by more than 3 each
 WITH pair AS (
@@ -173,6 +181,7 @@ ecommerce_sales_customer_analytics_150k
 =================================================
 */
 
+-- ecommerce_sales_customer_analytics_150k
 -- Which columns contain NULLs and how many each?
 -- Result (138,116 rows; 37 other columns have 0 NULLs):
 -- delivery_days            24,557 (17.8%)
@@ -185,7 +194,7 @@ ecommerce_sales_customer_analytics_150k
 -- campaign_name            83,233 (60.3%)
 -- coupon_code             110,502 (80.0%)
 
--- generated from information_schema.columns for the query for below
+-- generated from information_schema.columns, used for the query below
 SELECT
     'SELECT ' ||
     string_agg(
@@ -250,6 +259,7 @@ SELECT
 	COUNT(*) FILTER (WHERE customer_order_count IS NULL) AS customer_order_count_nulls 
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
+-- ecommerce_sales_customer_analytics_150k
 -- Do the five 24,557-NULL columns go missing on the same rows? 
 -- delivery_days, estimated_delivery_days, customer_rating, review_sentiment, customer_review
 -- Result: 24,557
@@ -262,6 +272,7 @@ WHERE delivery_days IS NULL AND
 	review_sentiment IS NULL AND
 	customer_review IS NULL;
 
+-- ecommerce_sales_customer_analytics_150k
 -- For those 24,557 rows, how do they distribute across order_status and delivery_status?
 -- Result (pct = % of all 138,116 rows): 
 -- delivery_status | order_status | rows   | pct
@@ -287,6 +298,7 @@ GROUP BY
 	order_status
 ORDER BY total_rows DESC;
 
+-- ecommerce_sales_customer_analytics_150k
 -- Whole-table counts for each delivery_status.
 -- Result: On Time 86,916 | Cancelled 24,557 | Delayed 16,886 | Early 9,757 (total 138,116)
 SELECT 
@@ -296,6 +308,7 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY delivery_status
 ORDER BY COUNT(*) DESC;
 
+-- ecommerce_sales_customer_analytics_150k
 -- Whole-table counts for each order_status.
 -- Result: Completed 113,559 | Returned 9,462 | Cancelled 8,398 | Pending 6,697 (total 138,116)
 SELECT 
@@ -305,6 +318,7 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY order_status
 ORDER BY COUNT(*) DESC;
 
+-- ecommerce_sales_customer_analytics_150k
 -- Whole-table counts for each order_status and each delivery_status.
 -- Result: Completed -> On Time 86,916 | Delayed 16,886 | Early 9,757
 --         Returned, Cancelled, Pending -> always delivery_status Cancelled (9,462 | 8,398 | 6,697)
@@ -316,6 +330,7 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY delivery_status, order_status
 ORDER BY COUNT(*) DESC;
 
+-- ecommerce_sales_customer_analytics_150k
 -- Are return_status and return_reason filled only for Returned orders?
 -- Result: only Returned orders (9,462) have return_status and return_reason filled; 0 rows with only one filled; 0 blank strings
 SELECT
@@ -329,6 +344,7 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY order_status
 ORDER BY total_rows DESC;
 
+-- ecommerce_sales_customer_analytics_150k
 -- Does the coupon_code NULL rate differ between rows with and without a campaign_name?
 -- Result: coupon_code NULL rate is 79.72% with a campaign (54,883 rows) and 80.19% without (83,233 rows)
 -- -> the two columns look independent
@@ -343,11 +359,12 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY campaign_name IS NULL
 ORDER BY campaign_is_null;
 
+-- ecommerce_sales_customer_analytics_150k
 -- Check for blanks and placeholders in text columns
 -- Result: 0 matches in all 29 text columns for empty or whitespace-only strings
 -- and for N/A, NA, NULL, UNKNOWN, NONE (case-insensitive, whole value only).
 
--- generated from information_schema.columns for the query below
+-- generated from information_schema.columns, used for the query below
 SELECT 
 	'SELECT ' ||
 	string_agg (
@@ -403,6 +420,7 @@ customer_master
 ==========================================================
 */
 
+-- customer_master
 -- Which columns contain NULLs and how many each?
 -- Result: 0 NULLs in all 11 columns (25,000 rows)
 SELECT  
@@ -419,6 +437,7 @@ SELECT
 	COUNT(*) FILTER (WHERE customer_acquisition_cost IS NULL) AS customer_acquisition_cost_nulls 
 FROM raw.customer_master;
 
+-- customer_master
 -- Check for blanks and placeholders in text columns
 -- Result: 0 matches in all 9 text columns (empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE)
 SELECT 
@@ -439,6 +458,7 @@ product_catalog
 ==========================================================
 */
 
+-- product_catalog
 -- Which columns contain NULLs and how many each?
 -- Result: 0 NULLs in all 9 columns (1,175 rows)
 SELECT 
@@ -453,6 +473,7 @@ SELECT
 	COUNT(*) FILTER (WHERE product_rating IS NULL) AS product_rating_nulls 
 FROM raw.product_catalog;
 
+-- product_catalog
 -- Check for blanks and placeholders in text columns
 -- Result: 0 matches in all 6 text columns (empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE)
 SELECT 
@@ -470,6 +491,7 @@ order_items
 ==========================================================
 */
 
+-- order_items
 -- Which columns contain NULLs and how many each?
 -- Result: 0 NULLs in all 12 columns (397,569 rows)
 SELECT 
@@ -487,6 +509,7 @@ SELECT
 	COUNT(*) FILTER (WHERE profit IS NULL) AS profit_nulls 
 FROM raw.order_items;
 
+-- order_items
 -- Check for blanks and placeholders in text columns
 -- Result: 0 matches in order_id and product_id (empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE)
 SELECT 
@@ -500,6 +523,7 @@ dataset_statistics
 ==========================================================
 */
 
+-- dataset_statistics
 -- Which columns contain NULLs and how many each?
 -- Result: 0 NULLs in all 11 columns (1 row)
 SELECT 
@@ -516,6 +540,7 @@ SELECT
 	COUNT(*) FILTER (WHERE cancellation_rate IS NULL) AS cancellation_rate_nulls 
 FROM raw.dataset_statistics;
 
+-- dataset_statistics
 -- Check for blanks and placeholders in text columns
 -- Result: 0 matches in all 6 text columns (empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE)
 SELECT 
@@ -540,6 +565,7 @@ ecommerce_sales_customer_analytics_150k
 =================================================
 */
 
+-- ecommerce_sales_customer_analytics_150k
 -- Casing variants, spelling inconsistencies, or values that don't fit
 -- Result: 91 distinct values across 16 categorical columns.
 -- Skimmed for casing variants, spelling differences, tiny groups and values that don't fit the column.
@@ -657,12 +683,39 @@ FROM raw.ecommerce_sales_customer_analytics_150k
 GROUP BY is_repeat_customer
 ORDER BY column_name, row_count DESC;
 
+-- ecommerce_sales_customer_analytics_150k
+-- Check length of order_id and customer_id 
+-- Result: every order_id has length 10 and every customer_id has length 11 (138,116 rows each)
+SELECT
+	'order_id' AS column_name,
+	LENGTH(order_id) AS id_length,
+	COUNT(*) AS total_rows
+FROM raw.ecommerce_sales_customer_analytics_150k
+GROUP BY LENGTH(order_id)
+UNION ALL
+SELECT
+	'customer_id' AS column_name,
+	LENGTH(customer_id) AS id_length,
+	COUNT(*) AS total_rows
+FROM raw.ecommerce_sales_customer_analytics_150k
+GROUP BY LENGTH(customer_id);
+
+-- ecommerce_sales_customer_analytics_150k
+-- Check order_id matches ORD-XXXXXX (6 digits) and customer_id matches CUST-XXXXXX (6 digits)
+-- Patterns inferred from sample values, then confirmed by this check
+-- Result: 0 mismatches in both columns
+SELECT
+	COUNT(*) FILTER (WHERE order_id !~ '^ORD-[0-9]{6}$') AS order_id_mismatches,
+	COUNT(*) FILTER (WHERE customer_id !~ '^CUST-[0-9]{6}$') AS customer_id_mismatches
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
 /*
 =================================================
 customer_master
 =================================================
 */
 
+-- customer_master
 -- Casing and whitespace variants in categorical columns
 -- Result: distinct_values = distinct_normalized for all 6 columns (gender, customer_segment,
 -- customer_city, customer_state, customer_country, region), so no casing or spacing variants
@@ -703,6 +756,7 @@ SELECT
 FROM raw.customer_master
 ORDER BY column_name;
 
+-- customer_master
 -- Distinct values with counts for low-cardinality columns
 -- Result: gender, customer_segment, customer_state, customer_country and region skimmed.
 -- No casing or spelling variants, tiny groups or out-of-place values found.
@@ -740,13 +794,32 @@ SELECT
 	COUNT(*) AS row_count 
 FROM raw.customer_master
 GROUP BY region
+ORDER BY column_name, row_count DESC;
+
+-- customer_master
+-- Check length of customer_id
+-- Result: every customer_id has length 11 (25,000 rows)
+SELECT
+	LENGTH(customer_id) AS id_length,
+	COUNT(*) AS total_rows
+FROM raw.customer_master
+GROUP BY LENGTH(customer_id);
+
+-- customer_master
+-- Check customer_id matches the pattern CUST-XXXXXX (6 digits)
+-- Patterns inferred from sample values, then confirmed by this check
+-- Result: 0 mismatches, so all customer_id values follow the same format
+SELECT
+	COUNT(*) FILTER (WHERE customer_id !~ '^CUST-[0-9]{6}$') AS format_mismatches
+FROM raw.customer_master;
 
 /*
 =================================================
-product catalog
+product_catalog
 =================================================
 */
 
+-- product_catalog
 -- Casing and whitespace variants in categorical columns
 -- Result: distinct_values = distinct_normalized for all 4 columns
 -- (brand 144, product_category 15, product_subcategory 117, supplier 10), so no casing or spacing variants
@@ -775,6 +848,7 @@ SELECT
 FROM raw.product_catalog
 ORDER BY column_name;
 
+-- product_catalog 
 -- Distinct values with counts for product_category and supplier
 -- Result: 15 categories and 10 suppliers skimmed. No spelling variants or out-of-place values found.
 SELECT
@@ -793,6 +867,7 @@ GROUP BY supplier
 ORDER BY column_name, 
 		row_count DESC;	
 
+-- product_catalog
 -- Which categories do the shared subcategories appear under?
 -- Result: Storage (Home & Kitchen, Office Supplies), Watches (Fashion, Jewelry),
 -- Furniture (Baby & Kids, Home & Kitchen). Pairings look plausible (skimmed).
@@ -802,11 +877,60 @@ SELECT
 FROM raw.product_catalog
 GROUP BY product_subcategory
 HAVING COUNT(DISTINCT product_category) > 1
-ORDER BY category_count DESC;
+ORDER BY product_subcategory DESC;
+
+-- product_catalog
+-- Check length of product_id
+-- Result: every product_id has length 11 (1,175 rows)
+SELECT
+	LENGTH(product_id) AS id_length,
+	COUNT(*) AS total_rows
+FROM raw.product_catalog
+GROUP BY LENGTH(product_id);
+
+-- product_catalog
+-- Check product_id matches the pattern PROD-XXXXXX (6 digits)
+-- Patterns inferred from sample values, then confirmed by this check
+-- Result: 0 mismatches, so all product_id values follow the same format
+SELECT
+	COUNT(*) FILTER (WHERE product_id !~ '^PROD-[0-9]{6}$') AS format_mismatches
+FROM raw.product_catalog;
 
 /*
 =================================================
-    STEP 5: VALIDITY
+order_items
+=================================================
+*/
+
+-- order_items
+-- Check length of order_id and product_id
+-- Result: every order_id has length 10 and every product_id has length 11 (397,569 rows each)
+SELECT
+	'order_id' AS column_name,
+	LENGTH(order_id) AS id_length,
+	COUNT(*) AS total_rows
+FROM raw.order_items
+GROUP BY LENGTH(order_id)
+UNION ALL
+SELECT
+	'product_id' AS column_name,
+	LENGTH(product_id) AS id_length,
+	COUNT(*) AS total_rows
+FROM raw.order_items
+GROUP BY LENGTH(product_id);
+
+-- order_items
+-- Check order_id matches ORD-XXXXXX and product_id matches PROD-XXXXXX (6 digits each)
+-- Patterns inferred from sample values, then confirmed by this check
+-- Result: 0 mismatches in both columns
+SELECT
+	COUNT(*) FILTER (WHERE order_id !~ '^ORD-[0-9]{6}$') AS order_id_mismatches,
+	COUNT(*) FILTER (WHERE product_id !~ '^PROD-[0-9]{6}$') AS product_id_mismatches
+FROM raw.order_items;
+
+/*
+=================================================
+    STEP 5: INTERNAL CONSISTENCY
 =================================================
 */
 
@@ -816,9 +940,10 @@ customer_master
 =================================================
 */
 
+-- customer_master
 -- How many rows have gross_sales different from quantity * unit_price?
 -- Result: 0 -> gross_sales is consistent across all 397,569 rows
 SELECT 
-	COUNT(*)
+	COUNT(*) AS mismatches
 FROM raw.order_items
 WHERE ROUND(gross_sales,2) IS DISTINCT FROM ROUND(quantity * unit_price, 2);
