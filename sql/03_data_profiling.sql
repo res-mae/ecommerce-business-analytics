@@ -1556,3 +1556,50 @@ INNER JOIN raw.ecommerce_sales_customer_analytics_150k AS s
 	ON i.order_id = s.order_id
 GROUP BY quantity_mismatch, gross_mismatch
 ORDER BY total_rows DESC;
+
+-- Result: order_items quantity is larger than the sales table quantity in all 11,226 mismatching orders.
+-- Difference (order_items minus sales) ranges from 1 to 31, average about 5.95.
+WITH item_totals AS (
+	SELECT
+		order_id,
+		SUM(quantity) AS total_quantity,
+		ROUND(SUM(gross_sales),2) AS total_gross
+	FROM raw.order_items
+	GROUP BY order_id
+)
+SELECT
+	CASE
+		WHEN i.total_quantity > s.quantity THEN 'yes'
+		ELSE 'no'
+	END AS item_quantity_is_greater,
+	COUNT(*) AS total_rows,
+	MIN(i.total_quantity - s.quantity) AS min_difference,
+	MAX(i.total_quantity - s.quantity) AS max_difference,
+	AVG(i.total_quantity - s.quantity) AS avg_difference
+FROM item_totals AS i
+INNER JOIN raw.ecommerce_sales_customer_analytics_150k AS s
+	ON i.order_id = s.order_id
+WHERE s.quantity IS DISTINCT FROM i.total_quantity
+GROUP BY item_quantity_is_greater;
+
+-- sales vs order_items vs dataset_statistics
+-- Reconcile total revenue (net_sales) and total profit
+-- Result: sales = dataset_statistics exactly (177,134,263.74 | 76,146,395.76).
+-- order_items is higher: 192,398,877.29 | 82,698,038.55 (about +8.6%).
+SELECT 
+	'dataset_statistics' AS table_name,
+	REPLACE(TRIM(LEADING '$' FROM total_revenue),',','')::NUMERIC AS total_revenue,
+	REPLACE(TRIM(LEADING '$' FROM total_profit),',','')::NUMERIC AS total_profit
+FROM raw.dataset_statistics
+UNION ALL
+SELECT 
+	'order_items' AS table_name,
+	ROUND(SUM(net_sales),2) AS total_revenue,
+	ROUND(SUM(profit),2) AS total_profit
+FROM raw.order_items
+UNION ALL
+SELECT 
+	'sales' AS table_name,
+ 	ROUND(SUM(net_sales),2) AS total_revenue,
+	ROUND(SUM(profit),2) AS total_profit
+FROM raw.ecommerce_sales_customer_analytics_150k; 
