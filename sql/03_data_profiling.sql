@@ -1602,4 +1602,37 @@ SELECT
 	'sales' AS table_name,
  	ROUND(SUM(net_sales),2) AS total_revenue,
 	ROUND(SUM(profit),2) AS total_profit
-FROM raw.ecommerce_sales_customer_analytics_150k; 
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+-- sales vs dataset_statistics
+-- Compare Total Customers, Average Order Value and Average Rating
+-- Result: all three match exactly (24,911 | 1,282.50 | 3.68).
+-- Average Order Value is the average net_sales. Average Rating covers Completed orders only (NULLs ignored).
+SELECT
+	'dataset_statistics' AS table_name,
+	total_customers,
+	REPLACE(TRIM(LEADING '$' FROM average_order_value),',','')::NUMERIC AS average_order_value,
+	average_rating
+FROM raw.dataset_statistics
+UNION ALL
+SELECT 
+	'sales' AS table_name,
+	COUNT(DISTINCT customer_id) AS total_customers,
+	ROUND(AVG(net_sales),2) AS average_order_value,
+	ROUND(AVG(customer_rating),2) AS average_rating
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+
+-- order_items vs dataset_statistics
+-- Distinct product_id in order_items vs Total Products Used
+-- Result: 1,175 distinct products in order_items (same as product_catalog). The stat says 138,116,
+-- which equals Total Transactions, so it does not measure distinct products.
+SELECT
+	'order_items' AS source,
+	COUNT(DISTINCT product_id)
+FROM raw.order_items
+UNION ALL
+SELECT
+	'dataset_statistics' AS source,
+	total_products_used 
+FROM raw.dataset_statistics;
