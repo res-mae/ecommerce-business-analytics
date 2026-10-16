@@ -1466,3 +1466,93 @@ SELECT
 	COUNT(*) AS mismatches
 FROM raw.order_items
 WHERE ROUND(gross_sales,2) IS DISTINCT FROM ROUND(quantity * unit_price, 2);
+
+/*
+=================================================
+    STEP 6: CROSS-TABLE INTEGRITY
+=================================================
+*/
+
+-- sales vs order_items
+-- Sales orders with no line items in order_items
+-- Result: 0
+SELECT
+	COUNT(*)
+FROM raw.ecommerce_sales_customer_analytics_150k AS s
+WHERE NOT EXISTS (
+	SELECT 1 
+	FROM raw.order_items AS o
+	WHERE o.order_id = s.order_id
+);
+
+-- order_items vs sales
+-- order_items rows whose order_id is not in the sales table
+-- Result: 0. Both tables cover the same 138,116 orders.
+SELECT
+	COUNT(*)
+FROM raw.order_items AS o
+WHERE NOT EXISTS (
+	SELECT 1 
+	FROM raw.ecommerce_sales_customer_analytics_150k AS s
+	WHERE o.order_id = s.order_id
+);
+
+-- sales vs order_items
+-- Compare order-level totals in the sales table with SUMs of order_items per order
+-- Result (138,116 orders): mismatches quantity 11,226 | gross_sales 11,226 | tax_amount 11,226 |
+-- net_sales 11,226 | product_cost 11,226 | profit 11,226 | shipping_cost 11,204 | discount_amount 9,799.
+-- 126,890 orders (91.9%) match on every column.
+WITH item_totals AS (
+	SELECT
+		order_id,
+		SUM(quantity) AS total_quantity,
+		ROUND(SUM(discount_amount),2) AS total_discount,
+		ROUND(SUM(gross_sales),2) AS total_gross,
+		ROUND(SUM(tax_amount),2) AS total_tax,
+		ROUND(SUM(shipping_cost),2) AS total_shipping,
+		ROUND(SUM(net_sales),2) AS total_net,
+		ROUND(SUM(product_cost),2) AS total_product_cost,
+		ROUND(SUM(profit),2) AS total_profit
+	FROM raw.order_items
+	GROUP BY order_id
+)
+SELECT 
+	COUNT(*) AS total_orders,
+	COUNT(*) FILTER(WHERE i.total_quantity IS DISTINCT FROM s.quantity) AS quantity_mismatch,
+	COUNT(*) FILTER(WHERE ROUND(i.total_discount,2) IS DISTINCT FROM ROUND(s.discount_amount,2)) AS discount_mismatch,
+	COUNT(*) FILTER(WHERE ROUND(i.total_gross,2) IS DISTINCT FROM ROUND(s.gross_sales,2)) AS gross_mismatch,
+	COUNT(*) FILTER(WHERE ROUND(i.total_tax,2) IS DISTINCT FROM ROUND(s.tax_amount,2)) AS tax_mismatch,
+	COUNT(*) FILTER(WHERE ROUND(i.total_shipping,2) IS DISTINCT FROM ROUND(s.shipping_cost,2)) AS shipping_mismatch,
+	COUNT(*) FILTER(WHERE ROUND(i.total_net,2) IS DISTINCT FROM ROUND(s.net_sales,2)) AS net_mismatch,
+	COUNT(*) FILTER(WHERE ROUND(i.total_product_cost,2) IS DISTINCT FROM ROUND(s.product_cost,2)) AS product_cost_mismatch,
+	COUNT(*) FILTER(WHERE ROUND(i.total_profit,2) IS DISTINCT FROM ROUND(s.profit,2)) AS profit_mismatch
+FROM item_totals AS i
+INNER JOIN raw.ecommerce_sales_customer_analytics_150k AS s
+	ON i.order_id = s.order_id;
+
+-- sales vs order_items
+-- Do the same orders mismatch on quantity and gross_sales?
+-- Result: yes/yes 11,226 | no/no 126,890. No order mismatches on only one of the two.
+WITH item_totals AS (
+	SELECT
+		order_id,
+		SUM(quantity) AS total_quantity,
+		ROUND(SUM(gross_sales),2) AS total_gross
+	FROM raw.order_items
+	GROUP BY order_id
+)
+SELECT 
+	CASE 
+		WHEN i.total_quantity IS DISTINCT FROM s.quantity THEN 'yes'
+		ELSE 'no'
+	END AS quantity_mismatch,
+	CASE 
+		WHEN ROUND(i.total_gross,2) IS DISTINCT FROM ROUND(s.gross_sales,2) THEN 'yes'
+		ELSE 'no'
+	END AS gross_mismatch,
+	COUNT(*) AS total_rows
+FROM item_totals AS i
+INNER JOIN raw.ecommerce_sales_customer_analytics_150k AS s
+	ON i.order_id = s.order_id
+GROUP BY quantity_mismatch, gross_mismatch
+ORDER BY total_rows DESC;
