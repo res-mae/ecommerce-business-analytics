@@ -1622,7 +1622,6 @@ SELECT
 	ROUND(AVG(customer_rating),2) AS average_rating
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
-
 -- order_items vs dataset_statistics
 -- Distinct product_id in order_items vs Total Products Used
 -- Result: 1,175 distinct products in order_items (same as product_catalog). The stat says 138,116,
@@ -1636,3 +1635,74 @@ SELECT
 	'dataset_statistics' AS source,
 	total_products_used 
 FROM raw.dataset_statistics;
+
+-- order_items vs product_catalog
+-- order_items rows whose product_id is not in product_catalog
+-- Result: 0
+SELECT
+	COUNT(*)
+FROM raw.order_items AS o
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM raw.product_catalog AS p
+	WHERE o.product_id = p.product_id
+);
+
+-- product_catalog vs order_items
+-- Catalog products with no order lines
+-- Result: 0. Catalog and order_items use the same 1,175 products.
+SELECT
+	COUNT(*)
+FROM raw.product_catalog AS p
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM raw.order_items AS o
+	WHERE o.product_id = p.product_id
+);
+
+-- sales vs customer_master
+-- Sales rows whose customer_id is not in customer_master
+-- Result: 0
+SELECT
+	COUNT(*)
+FROM raw.ecommerce_sales_customer_analytics_150k AS s
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM raw.customer_master AS c
+	WHERE s.customer_id = c.customer_id
+);
+
+-- customer_master vs sales
+-- Customers with no orders in the sales table
+-- Result: 89 (25,000 - 24,911).
+SELECT
+	COUNT(*)
+FROM raw.customer_master AS c
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM raw.ecommerce_sales_customer_analytics_150k AS s
+	WHERE s.customer_id = c.customer_id
+);
+
+/*
+=================================================
+    STEP 7: TIME COVERAGE
+=================================================
+*/
+
+-- ecommerce_sales_customer_analytics_150k
+-- Orders per month
+-- Result: 60 months present (2021-01 to 2025-12). Monthly orders range from 1,565 (2021-02)
+-- to 3,592 (2022-12). Monthly volumes skimmed with no sharp drops or spikes.
+WITH order_per_month AS (
+SELECT
+	DATE_TRUNC('month', order_date::DATE)::DATE AS order_month,
+	COUNT(order_id) AS total_orders
+FROM raw.ecommerce_sales_customer_analytics_150k
+GROUP BY order_month
+) 
+SELECT
+	COUNT(*) AS total_months,
+	MIN(total_orders) AS min_total_orders,
+	MAX(total_orders) AS max_total_orders
+FROM order_per_month;
