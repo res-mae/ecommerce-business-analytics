@@ -1684,6 +1684,15 @@ WHERE NOT EXISTS (
 	WHERE s.customer_id = c.customer_id
 );
 
+-- sales vs dataset_statistics
+-- Does per-row rounding change the reconciled totals?
+-- Result: SUM(ROUND(net_sales, 2)) minus reference revenue = 0.00.
+SELECT SUM(ROUND(net_sales, 2)) - 177134263.74 AS rounded_diff
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+SELECT SUM(ROUND(profit, 2)) - 76146395.76 AS rounded_profit_diff
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
 /*
 =================================================
     STEP 7: TIME COVERAGE
