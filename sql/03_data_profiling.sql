@@ -952,6 +952,45 @@ SELECT
 	MAX(order_time::TIME) AS max_order_time
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
+-- ecommerce_sales_customer_analytics_150k
+-- Distinct values of is_repeat_customer
+-- Result: True (137782) and False (334) only
+SELECT is_repeat_customer, COUNT(*) AS total_rows
+FROM raw.ecommerce_sales_customer_analytics_150k
+GROUP BY is_repeat_customer;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Rows with more than 2 decimals, per numeric column
+-- Result: rows with more than 2 decimals: gross_sales 29,195 | discount_amount 25,885 | tax_amount 29,335 |
+-- shipping_cost 34,081 | net_sales 29,433 | product_cost 29,457 | profit 29,735 |
+-- profit_margin_percentage 0 | customer_lifetime_value 29,963 (of 138,116 rows).
+SELECT
+	COUNT(*) FILTER (WHERE gross_sales IS DISTINCT FROM ROUND(gross_sales,2)) AS gross_sales_diff,
+	COUNT(*) FILTER (WHERE discount_amount IS DISTINCT FROM ROUND(discount_amount,2)) AS discount_amount_diff,
+	COUNT(*) FILTER (WHERE tax_amount IS DISTINCT FROM ROUND(tax_amount,2)) AS tax_amount_diff,
+	COUNT(*) FILTER (WHERE shipping_cost IS DISTINCT FROM ROUND(shipping_cost,2)) AS shipping_cost_diff,
+	COUNT(*) FILTER (WHERE net_sales IS DISTINCT FROM ROUND(net_sales,2)) AS net_sales_diff,
+	COUNT(*) FILTER (WHERE product_cost IS DISTINCT FROM ROUND(product_cost,2)) AS product_cost_diff,
+	COUNT(*) FILTER (WHERE profit IS DISTINCT FROM ROUND(profit,2)) AS profit_diff,
+	COUNT(*) FILTER (WHERE profit_margin_percentage IS DISTINCT FROM ROUND(profit_margin_percentage,2)) AS margin_diff,
+	COUNT(*) FILTER (WHERE customer_lifetime_value IS DISTINCT FROM ROUND(customer_lifetime_value,2)) AS clv_diff
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+-- ecommerce_sales_customer_analytics_150k
+-- Size of the extra decimals in the 8 money columns that have more than 2 decimals
+-- Result: largest gap across all 8 columns is 0.000000000004 (customer_lifetime_value).
+-- The extra decimals are floating-point noise, so rounding to 2 decimals is safe.
+SELECT
+	MAX(ABS(gross_sales - ROUND(gross_sales,2))) AS gross_sales_gap,
+	MAX(ABS(discount_amount - ROUND(discount_amount,2))) AS discount_amount_gap,
+	MAX(ABS(tax_amount - ROUND(tax_amount,2))) AS tax_amount_gap,
+	MAX(ABS(shipping_cost - ROUND(shipping_cost,2))) AS shipping_cost_gap,
+	MAX(ABS(net_sales - ROUND(net_sales,2))) AS net_sales_gap,
+	MAX(ABS(product_cost - ROUND(product_cost,2))) AS product_cost_gap,
+	MAX(ABS(profit - ROUND(profit,2))) AS profit_gap,
+	MAX(ABS(customer_lifetime_value - ROUND(customer_lifetime_value,2))) AS clv_gap
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
 /*
 =================================================
 customer_master
@@ -1326,6 +1365,31 @@ SELECT
 	COUNT(*) FILTER (WHERE profit < 0) AS negative_values
 FROM raw.order_items;
 
+-- order_items
+-- Rows with more than 2 decimals, per numeric column
+-- Result: shipping_cost 51,654 | discount_percentage 343,632 (continuous values, e.g. 0.4682995743617819).
+-- All other money columns: 0.
+SELECT
+	COUNT(*) FILTER (WHERE unit_price IS DISTINCT FROM ROUND(unit_price,2)) AS unit_price_diff,
+	COUNT(*) FILTER (WHERE discount_percentage IS DISTINCT FROM ROUND(discount_percentage,2)) AS discount_percentage_diff,
+	COUNT(*) FILTER (WHERE discount_amount IS DISTINCT FROM ROUND(discount_amount,2)) AS discount_amount_diff,
+	COUNT(*) FILTER (WHERE gross_sales IS DISTINCT FROM ROUND(gross_sales,2)) AS gross_sales_diff,
+	COUNT(*) FILTER (WHERE tax_amount IS DISTINCT FROM ROUND(tax_amount,2)) AS tax_amount_diff,
+	COUNT(*) FILTER (WHERE shipping_cost IS DISTINCT FROM ROUND(shipping_cost,2)) AS shipping_cost_diff,
+	COUNT(*) FILTER (WHERE net_sales IS DISTINCT FROM ROUND(net_sales,2)) AS net_sales_diff,
+	COUNT(*) FILTER (WHERE product_cost IS DISTINCT FROM ROUND(product_cost,2)) AS product_cost_diff,
+	COUNT(*) FILTER (WHERE profit IS DISTINCT FROM ROUND(profit,2)) AS profit_diff
+FROM raw.order_items;
+
+-- order_items
+-- Would rounding discount_percentage to 2 decimals preserve discount_amount?
+-- Result: 341,223 of 397,569 rows (85.8%) would no longer match, so keep full precision.
+SELECT COUNT(*) FILTER (WHERE
+	ROUND(discount_amount, 2) IS DISTINCT FROM
+	ROUND(gross_sales * ROUND(discount_percentage, 2), 2)
+) AS mismatches_if_rounded
+FROM raw.order_items;
+
 /*
 =================================================
     STEP 5: INTERNAL CONSISTENCY
@@ -1453,15 +1517,9 @@ SELECT
 FROM raw.order_items
 WHERE discount_percentage > 0 AND discount_amount = 0;
 
-/*
-=================================================
-customer_master
-=================================================
-*/
-
--- customer_master
--- How many rows have gross_sales different from quantity * unit_price?
--- Result: 0 -> gross_sales is consistent across all 397,569 rows
+-- order_items
+-- Does gross_sales = quantity * unit_price (2 decimals)?
+-- Result: 0 mismatches across 397,569 rows.
 SELECT 
 	COUNT(*) AS mismatches
 FROM raw.order_items
@@ -1557,6 +1615,8 @@ INNER JOIN raw.ecommerce_sales_customer_analytics_150k AS s
 GROUP BY quantity_mismatch, gross_mismatch
 ORDER BY total_rows DESC;
 
+-- sales vs order_items
+-- Direction and size of the quantity gap on the mismatching orders (order_items minus sales)
 -- Result: order_items quantity is larger than the sales table quantity in all 11,226 mismatching orders.
 -- Difference (order_items minus sales) ranges from 1 to 31, average about 5.95.
 WITH item_totals AS (
@@ -1691,6 +1751,23 @@ SELECT SUM(ROUND(net_sales, 2)) - 177134263.74 AS rounded_diff
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
 SELECT SUM(ROUND(profit, 2)) - 76146395.76 AS rounded_profit_diff
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
+-- sales vs dataset_statistics
+-- Compare Total Transactions, Return Rate and Cancellation Rate
+-- Result: all three match exactly (138,116 | 6.85 | 6.08).
+SELECT
+	'dataset_statistics' AS source,
+	total_transactions,
+	REPLACE(return_rate, '%', '')::NUMERIC AS return_rate_pct,
+	REPLACE(cancellation_rate, '%', '')::NUMERIC AS cancellation_rate_pct
+FROM raw.dataset_statistics
+UNION ALL
+SELECT
+	'sales',
+	COUNT(*),
+	ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'Returned') / COUNT(*), 2),
+	ROUND(100.0 * COUNT(*) FILTER (WHERE order_status = 'Cancelled') / COUNT(*), 2)
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
 /*
