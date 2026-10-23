@@ -991,6 +991,17 @@ SELECT
 	MAX(ABS(customer_lifetime_value - ROUND(customer_lifetime_value,2))) AS clv_gap
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
+-- ecommerce_sales_customer_analytics_150k
+-- Rows where whole-number columns hold a fractional value
+-- Result: 0 in quantity, customer_age, loyalty_points_earned, loyalty_points_redeemed and customer_order_count (138,116 rows).
+SELECT 
+	COUNT(*) FILTER (WHERE quantity IS DISTINCT FROM ROUND(quantity)) AS quantity_count,
+	COUNT(*) FILTER (WHERE customer_age IS DISTINCT FROM ROUND(customer_age)) AS customer_age_count,
+	COUNT(*) FILTER (WHERE loyalty_points_earned IS DISTINCT FROM ROUND(loyalty_points_earned)) AS points_earned_count,
+	COUNT(*) FILTER (WHERE loyalty_points_redeemed IS DISTINCT FROM ROUND(loyalty_points_redeemed)) AS points_redeemed_count,
+	COUNT(*) FILTER (WHERE customer_order_count IS DISTINCT FROM ROUND(customer_order_count)) AS order_count_count
+FROM raw.ecommerce_sales_customer_analytics_150k;
+
 /*
 =================================================
 customer_master

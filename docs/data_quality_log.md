@@ -81,3 +81,28 @@
 | dataset_statistics, order_items, product_catalog | Total Products Used | Stat says 138,116, equal to Total Transactions. order_items has 1,175 distinct product_id, the same count as product_catalog. The stat does not measure distinct products. | Ignore this stat. Use the 1,175 from the data. | Complete |
 | order_items, product_catalog, sales table, customer_master | Orphan keys (fact to dimension) | 0 order_items rows with a product_id missing from product_catalog. 0 sales rows with a customer_id missing from customer_master. | None needed. Tables can be joined on product_id and customer_id without losing rows. | Complete |
 | customer_master, sales table | Customers without orders (reverse orphan check) | 89 customers in customer_master have no orders (25,000 - 24,911). 0 products in product_catalog without order lines. | Keep the 89 in the raw layer. Count active customers from the sales table. Decide in the model whether to include them in the customer dimension. | Complete |
+
+## Analytics-layer validation
+
+### analytics.sales
+
+| Check | Finding | Decision | Status |
+|---|---|---|---|
+| SQL table creation and row count | Created `analytics.sales` from `raw.ecommerce_sales_customer_analytics_150k`. 138,116 rows loaded, matching the raw table. | Preserve one row per order. Raw table remains unchanged. | Complete |
+| Order uniqueness | 138,116 rows and 138,116 distinct `order_id` values. | Retain `order_id` as the order-level key. | Complete |
+| Date and time conversions | `order_date` converted to DATE and `order_time` converted to TIME. Both columns have 0 NULLs after conversion. | Use proper date/time types for analysis. | Complete |
+| Boolean conversion | `is_repeat_customer` converted from TEXT to BOOLEAN, with 0 NULLs after conversion. | Use the Boolean field in analytics. | Complete |
+| Campaign and coupon flags | `has_campaign` has 54,883 TRUE rows; `has_coupon` has 27,614 TRUE rows. | Keep the original nullable fields and use Boolean flags to identify non-NULL campaign and coupon values. | Complete |
+| Monetary rounding | The 8 planned monetary columns were rounded to 2 decimal places during insertion. `profit_margin_percentage` was left unchanged. | Apply the documented precision decisions in the analytics layer. | Complete |
+| Financial total validation | Total `net_sales` = 177,134,263.74; total `profit` = 76,146,395.76. Both match the expected totals from raw profiling and `dataset_statistics`. | Use `analytics.sales` for order-level financial analysis. | Complete |
+| Overall validation | All verification queries matched the expected results. | Use `analytics.sales` as the cleaned order-level table for subsequent analysis. | Complete |
+
+### analytics.order_items
+
+| Check | Finding | Decision | Status |
+|---|---|---|---|
+| SQL table creation and row count | Created `analytics.order_items` from `raw.order_items`. 397,569 rows loaded. | Preserve all source rows. Raw table remains unchanged. | Complete |
+| Order and product-pair counts | 138,116 distinct orders and 397,482 distinct `(order_id, product_id)` pairs across 397,569 rows. | Preserve repeated order-product pairs; do not impose uniqueness on the pair. | Complete |
+| Shipping-cost rounding | 0 rows have `shipping_cost` values differing from `ROUND(shipping_cost, 2)`. | Round shipping cost to two decimal places in the analytics layer. | Complete |
+| NULL validation | 0 NULLs in `order_id`, `product_id`, and `shipping_cost`. | No additional cleaning needed for these checks. | Complete |
+| Overall validation | All verification queries matched the expected results. | Use `analytics.order_items` for product-level analysis, alongside `analytics.sales` for order-level analysis. | Complete |

@@ -10,20 +10,20 @@ The raw layer is never changed. All actions are applied in the analytics layer.
 
 | Column | Issue found | Cleaning action | Evidence / decision | Status |
 |---|---|---|---|---|
-| `order_date` | TEXT in raw | Convert to DATE | All 138,116 values parse. Decision 2026-10-17 | To do |
-| `order_time` | TEXT in raw | Convert to TIME | All 138,116 values parse. Decision 2026-10-17 | To do |
-| `is_repeat_customer` | TEXT, only 'True' and 'False' | Convert to BOOLEAN | Decision 2026-10-17 | To do |
-| `gross_sales` | More than 2 decimals in 29,195 rows (floating-point noise) | Round to 2 decimals | Decision 2026-10-18 | To do |
-| `discount_amount` | More than 2 decimals in 25,885 rows | Round to 2 decimals | Decision 2026-10-18 | To do |
-| `tax_amount` | More than 2 decimals in 29,335 rows | Round to 2 decimals | Decision 2026-10-18 | To do |
-| `shipping_cost` | More than 2 decimals in 34,081 rows | Round to 2 decimals | Decision 2026-10-18 | To do |
-| `net_sales` | More than 2 decimals in 29,433 rows. Includes tax and shipping | Round to 2 decimals. Decide in the model whether Total Sales means `net_sales` | Decision 2026-10-18. Formula check in log | To do |
-| `product_cost` | More than 2 decimals in 29,457 rows | Round to 2 decimals | Decision 2026-10-18 | To do |
-| `profit` | More than 2 decimals in 29,735 rows. Includes tax | Round to 2 decimals. Keep as given. Optional "profit excl. tax" measure later | Decisions 2026-10-17 and 2026-10-18. Rounded sum matches reference profit | To do |
-| `customer_lifetime_value` | More than 2 decimals in 29,963 rows | Round to 2 decimals | Decision 2026-10-18 | To do |
+| `order_date` | TEXT in raw | Convert to DATE | All 138,116 values parse. Decision 2026-10-17 | Done |
+| `order_time` | TEXT in raw | Convert to TIME | All 138,116 values parse. Decision 2026-10-17 | Done |
+| `is_repeat_customer` | TEXT, only 'True' and 'False' | Convert to BOOLEAN | Decision 2026-10-17 | Done |
+| `gross_sales` | More than 2 decimals in 29,195 rows (floating-point noise) | Round to 2 decimals | Decision 2026-10-18 | Done |
+| `discount_amount` | More than 2 decimals in 25,885 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
+| `tax_amount` | More than 2 decimals in 29,335 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
+| `shipping_cost` | More than 2 decimals in 34,081 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
+| `net_sales` | More than 2 decimals in 29,433 rows. Includes tax and shipping | Round to 2 decimals. Decide in the model whether Total Sales means `net_sales` | Decision 2026-10-18. Formula check in log | Done |
+| `product_cost` | More than 2 decimals in 29,457 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
+| `profit` | More than 2 decimals in 29,735 rows. Includes tax | Round to 2 decimals. Keep as given. Optional "profit excl. tax" measure later | Decisions 2026-10-17 and 2026-10-18. Rounded sum matches reference profit | Done |
+| `customer_lifetime_value` | More than 2 decimals in 29,963 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
 | `profit_margin_percentage` | Already 2 decimals. 1 row differs from the recomputed value by a rounding tie | None | Log: margin formula check | No action |
-| `campaign_name` | NULL on 60.3% of rows | Keep NULL. Add `has_campaign` flag. Keep `Default_Campaign` as its own value | Decision 2026-10-18 | To do |
-| `coupon_code` | NULL on 80.0% of rows | Keep NULL. Add `has_coupon` flag | Decision 2026-10-18 | To do |
+| `campaign_name` | NULL on 60.3% of rows | Keep NULL. Add `has_campaign` flag. Keep `Default_Campaign` as its own value | Decision 2026-10-18 | Done |
+| `coupon_code` | NULL on 80.0% of rows | Keep NULL. Add `has_coupon` flag | Decision 2026-10-18 | Done |
 | `delivery_days` | NULL on 24,557 non-Completed orders | No imputation. Analyze Completed orders only | Decision 2026-10-13 | Modeling rule |
 | `estimated_delivery_days` | Same as above | Same as above | Decision 2026-10-13 | Modeling rule |
 | `customer_rating` | Same as above | Same as above | Decision 2026-10-13 | Modeling rule |
@@ -34,18 +34,19 @@ The raw layer is never changed. All actions are applied in the analytics layer.
 | `return_reason` | NULL on 93.1% (not returned) | No imputation | Log: return columns | No action |
 | `loyalty_points_earned` | 0 on all 24,557 non-Completed orders and 5 Completed orders | None. Valid values | Log: numeric ranges | No action |
 | `quantity` | Differs from the SUM of `order_items` quantity on 11,226 orders | Use sales table for order-level measures | Decision 2026-10-18 | Modeling rule |
-| `has_campaign` (new) | Derived from `campaign_name` | TRUE when a campaign name is recorded (includes `Default_Campaign`). Expected TRUE count 54,883 | Decision 2026-10-18 | To do |
-| `has_coupon` (new) | Derived from `coupon_code` | TRUE when a coupon code is recorded. Expected TRUE count 27,614 | Decision 2026-10-18 | To do |
+| `has_campaign` (new) | Derived from `campaign_name` | TRUE when a campaign name is recorded. Expected TRUE count 54,883 | Decision 2026-10-18 | Done |
+| `has_coupon` (new) | Derived from `coupon_code` | TRUE when a coupon code is recorded. Expected TRUE count 27,614 | Decision 2026-10-18 | Done |
 
 New columns to create: `has_campaign`, `has_coupon`.
 All other columns: no cleaning needed.
+
 
 ## order_items
 
 | Column | Issue found | Cleaning action | Evidence / decision | Status |
 |---|---|---|---|---|
 | `order_id`, `product_id` | 87 repeated pairs, none are exact copies | Keep all rows. Grain is one row per order line | Decision 2026-10-13 | No action |
-| `shipping_cost` | More than 2 decimals in 51,654 rows (13.0%) | Round to 2 decimals | Decision 2026-10-18 | To do |
+| `shipping_cost` | More than 2 decimals in 51,654 rows (13.0%) | Round to 2 decimals | Decision 2026-10-18 | Done |
 | `unit_price`, `discount_amount`, `gross_sales`, `tax_amount`, `net_sales`, `product_cost`, `profit` | 0 rows with more than 2 decimals | None | Log: order_items decimal check | No action |
 | `discount_percentage` | Continuous fraction (0 to 0.6) with up to 16 decimals. Not float noise | Keep full precision. Format as a percentage in Power BI | Rounding to 2 decimals breaks the discount formula on 341,223 rows (85.8%). Decision 2026-10-18 | No action |
 | (whole table) | Totals about 8.6% above the sales table | Product-level analysis only. Never sum with the sales table | Decision 2026-10-18 | Modeling rule |
