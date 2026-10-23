@@ -250,7 +250,104 @@ SELECT
 FROM analytics.order_items;
 
 
+-- Builds analytics.customers from raw.customer_master.
+-- Preserves all source rows and columns. Raw is never modified.
+
+DROP TABLE IF EXISTS analytics.customers;
+
+CREATE TABLE analytics.customers (
+	customer_id                  TEXT,
+	customer_name                TEXT,
+	customer_age                 NUMERIC,
+	gender                       TEXT,
+	customer_segment             TEXT,
+	customer_city                TEXT,
+	customer_state               TEXT,
+	customer_country             TEXT,
+	region                       TEXT,
+	customer_postal_code         TEXT,
+	customer_acquisition_cost    NUMERIC
+);
+
+INSERT INTO analytics.customers (
+	customer_id,
+	customer_name,
+	customer_age,
+	gender,
+	customer_segment,
+	customer_city,
+	customer_state,
+	customer_country,
+	region,
+	customer_postal_code,
+	customer_acquisition_cost
+)
+SELECT 
+	customer_id,
+	customer_name,
+	customer_age,
+	gender,
+	customer_segment,
+	customer_city,
+	customer_state,
+	customer_country,
+	region,
+	customer_postal_code,
+	customer_acquisition_cost
+FROM raw.customer_master;
+
+-- Verify customer table
+SELECT
+	COUNT(*) AS row_count,
+	COUNT(DISTINCT customer_id),
+	COUNT(*) FILTER (WHERE customer_id IS NULL) AS null_customer_id
+FROM analytics.customers;
 
 
-	
+-- Builds analytics.products from raw.product_catalog.
+-- Preserves all source rows and columns. Raw is never modified.
+
+DROP TABLE IF EXISTS analytics.products;
+
+CREATE TABLE analytics.products (
+	product_id            TEXT,
+	product_name          TEXT,
+	product_category      TEXT,
+	product_subcategory   TEXT,
+	brand                 TEXT,
+	supplier              TEXT,
+	unit_price            NUMERIC,
+	product_cost          NUMERIC,
+	product_rating        NUMERIC
+);
+
+INSERT INTO analytics.products (
+	product_id,
+	product_name,
+	product_category,
+	product_subcategory,
+	brand,
+	supplier,
+	unit_price,
+	product_cost,
+	product_rating
+)
+SELECT
+	product_id,
+	product_name,
+	product_category,
+	product_subcategory,
+	brand,
+	supplier,
+	unit_price,
+	product_cost,
+	product_rating
+FROM raw.product_catalog;
+
+-- Verify product table
+SELECT
+	COUNT(*) AS row_count,
+	COUNT(DISTINCT product_id) AS distinct_product_id,
+	COUNT(*) FILTER (WHERE product_id IS NULL) AS null_product_id
+FROM analytics.products;
 	

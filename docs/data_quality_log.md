@@ -106,3 +106,27 @@
 | Shipping-cost rounding | 0 rows have `shipping_cost` values differing from `ROUND(shipping_cost, 2)`. | Round shipping cost to two decimal places in the analytics layer. | Complete |
 | NULL validation | 0 NULLs in `order_id`, `product_id`, and `shipping_cost`. | No additional cleaning needed for these checks. | Complete |
 | Overall validation | All verification queries matched the expected results. | Use `analytics.order_items` for product-level analysis, alongside `analytics.sales` for order-level analysis. | Complete |
+
+### `analytics.customers`
+
+| Check | Expected result | Status |
+|---|---|---|
+| Table creation | Created from `raw.customer_master` | Complete |
+| Row count | 25,000 rows | Complete |
+| Customer ID uniqueness | 25,000 distinct customer IDs | Complete |
+| NULL customer IDs | 0 | Complete |
+| Source preservation | All 11 source columns and all source rows preserved | Complete |
+
+No additional cleaning or transformations were required. All 25,000 customer records were retained, including the 89 customers who have no orders in the sales data.
+
+### `analytics.products`
+
+| Check | Expected result | Status |
+|---|---|---|
+| Table creation | Created from `raw.product_catalog` | Complete |
+| Row count | 1,175 rows | Complete |
+| Product ID uniqueness | 1,175 distinct product IDs | Complete |
+| NULL product IDs | 0 | Complete |
+| Source preservation | All 9 source columns and all source rows preserved | Complete |
+
+No additional cleaning or transformations were required. All 1,175 product records were retained, and category and subcategory values were preserved because some subcategories appear under multiple categories.
