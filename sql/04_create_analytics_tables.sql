@@ -158,13 +158,16 @@ SELECT
 	coupon_code IS NOT NULL
 FROM raw.ecommerce_sales_customer_analytics_150k;
 
--- Check row count and order uniqueness
+-- analytics.sales: Check row count and order uniqueness
+-- Result: 138116 row_count, 138116 unique_id
 SELECT
 	COUNT(*) AS row_count,
 	COUNT(DISTINCT order_id) AS unique_id
 FROM analytics.sales;
 
--- Check converted values and flags
+-- analytics.sales: Check converted values and flags
+-- Result: 0 NULL for order_date, order_time, and is_repeat_customer
+-- 54883 TRUE count for has_campaign and 27614 for has_coupon
 SELECT
 	COUNT(*) FILTER (WHERE order_date IS NULL) AS null_order_date,
 	COUNT(*) FILTER (WHERE order_time IS NULL) AS null_order_time,
@@ -173,11 +176,51 @@ SELECT
 	COUNT(*) FILTER (WHERE has_coupon) AS coupon_count
 FROM analytics.sales;
 
--- Check financial totals
+-- analytics.sales: Check financial totals
+-- Result: 177134263.74 total_net_sales, 76146395.76 total_profit
 SELECT
 	SUM(net_sales) AS total_net_sales,
 	SUM(profit) AS total_profit
 FROM analytics.sales;
+
+-- analytics.sales: order_date range
+-- Result: 2021-01-01 to 2025-12-31
+SELECT
+	MIN(order_date) AS min_order_date,
+	MAX(order_date) AS max_order_date
+FROM analytics.sales;
+
+-- analytics.sales: money columns with more than 2 decimals
+-- Result: 0 in all 8 columns
+SELECT
+	COUNT(*) FILTER (WHERE gross_sales IS DISTINCT FROM ROUND(gross_sales,2)) AS gross_sales_diff,
+	COUNT(*) FILTER (WHERE discount_amount IS DISTINCT FROM ROUND(discount_amount,2)) AS discount_amount_diff,
+	COUNT(*) FILTER (WHERE tax_amount IS DISTINCT FROM ROUND(tax_amount,2)) AS tax_amount_diff,
+	COUNT(*) FILTER (WHERE shipping_cost IS DISTINCT FROM ROUND(shipping_cost,2)) AS shipping_cost_diff,
+	COUNT(*) FILTER (WHERE net_sales IS DISTINCT FROM ROUND(net_sales,2)) AS net_sales_diff,
+	COUNT(*) FILTER (WHERE product_cost IS DISTINCT FROM ROUND(product_cost,2)) AS product_cost_diff,
+	COUNT(*) FILTER (WHERE profit IS DISTINCT FROM ROUND(profit,2)) AS profit_diff,
+	COUNT(*) FILTER (WHERE customer_lifetime_value IS DISTINCT FROM ROUND(customer_lifetime_value,2)) AS customer_lifetime_value_diff
+FROM analytics.sales;
+
+-- analytics.sales: is_repeat_customer counts
+-- Result: true 137782 | false 334
+SELECT 
+	is_repeat_customer,
+	COUNT(*) AS total_rows
+FROM analytics.sales
+GROUP BY is_repeat_customer;
+
+-- analytics.sales: column count and data types
+-- Result: 48 columns
+SELECT
+	column_name,
+	data_type,
+	ordinal_position
+FROM information_schema.columns
+WHERE table_schema = 'analytics'
+	AND table_name = 'sales'
+ORDER BY ordinal_position;
 
 
 -- Builds analytics.order_items from raw.order_items.
@@ -229,25 +272,52 @@ SELECT
 	profit
 FROM raw.order_items;
 
--- Check row count and repeated pairs
+-- analytics.order_items: Check row count and repeated pairs
+-- Result: row_count 397569 | distinct order_id 138116 | distinct pairs 397482
 SELECT
 	COUNT(*) AS row_count,
 	COUNT(DISTINCT order_id) AS distinct_order_id,
 	COUNT(DISTINCT (order_id, product_id)) AS distinct_pairs
 FROM analytics.order_items;
 
--- Verify shipping-cost rounding
+-- analytics.order_items: Verify shipping-cost rounding
+-- Result: 0 rows with more than 2 decimals
 SELECT
 	COUNT(*) AS rows_with_more_than_2_decimals
 FROM analytics.order_items
 WHERE shipping_cost IS DISTINCT FROM ROUND(shipping_cost, 2);
 
--- Verify NULLs
+-- analytics.order_items: Verify NULLs
+-- Result: 0 in all 3 columns
 SELECT
 	COUNT(*) FILTER (WHERE order_id IS NULL) AS null_order_id,
 	COUNT(*) FILTER (WHERE product_id IS NULL) AS null_product_id,
 	COUNT(*) FILTER (WHERE shipping_cost IS NULL) AS null_shipping_cost
 FROM analytics.order_items;
+
+-- analytics.order_items: Total net sales and profit
+-- Result: total net sales 192398877.29 | total profit 82698038.55
+SELECT
+	SUM(net_sales) AS total_net_sales,
+	SUM(profit) AS total_profit
+FROM analytics.order_items;
+
+-- analytics.order_items: discount_percentage decimal places
+-- Result: 343,632 rows differ from ROUND(discount_percentage, 2), same as raw, so full precision was kept.
+SELECT
+	COUNT(*) FILTER (WHERE discount_percentage IS DISTINCT FROM ROUND(discount_percentage,2)) AS total_rows
+FROM analytics.order_items;
+
+-- analytics.order_items: column count and data types
+-- Result: 12 columns, same as raw.order_items
+SELECT
+	column_name,
+	data_type,
+	ordinal_position
+FROM information_schema.columns
+WHERE table_schema = 'analytics'
+	AND table_name = 'order_items'
+ORDER BY ordinal_position;
 
 
 -- Builds analytics.customers from raw.customer_master.
@@ -296,12 +366,24 @@ SELECT
 	customer_acquisition_cost
 FROM raw.customer_master;
 
--- Verify customer table
+-- analytics.customers: Verify customer table
+-- Result: row count 25000 | distinct_customer_id 25000 | 0 null
 SELECT
 	COUNT(*) AS row_count,
-	COUNT(DISTINCT customer_id),
+	COUNT(DISTINCT customer_id) AS distinct_customer_id,
 	COUNT(*) FILTER (WHERE customer_id IS NULL) AS null_customer_id
 FROM analytics.customers;
+
+-- analytics.customers: column count and data types
+-- Result: 11 columns, same as raw.customer_master
+SELECT
+	column_name,
+	data_type,
+	ordinal_position
+FROM information_schema.columns
+WHERE table_schema = 'analytics'
+	AND table_name = 'customers'
+ORDER BY ordinal_position;
 
 
 -- Builds analytics.products from raw.product_catalog.
@@ -344,10 +426,79 @@ SELECT
 	product_rating
 FROM raw.product_catalog;
 
--- Verify product table
+-- analytics.products: Verify product table
+-- Result: row count 1175 | distinct product_id 1175 | 0 null
 SELECT
 	COUNT(*) AS row_count,
 	COUNT(DISTINCT product_id) AS distinct_product_id,
 	COUNT(*) FILTER (WHERE product_id IS NULL) AS null_product_id
 FROM analytics.products;
-	
+
+-- analytics.products: column count and data types
+-- Result: 9 columns, same as raw.product_catalog
+SELECT
+	column_name,
+	data_type,
+	ordinal_position
+FROM information_schema.columns
+WHERE table_schema = 'analytics'
+	AND table_name = 'products'
+ORDER BY ordinal_position;
+
+
+---- analytics cross table check.
+
+-- analytics.sales.customer_id with no match in analytics.customers
+-- Result: 0
+SELECT
+	COUNT(*)
+FROM analytics.sales s
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM analytics.customers c
+	WHERE s.customer_id = c.customer_id
+);
+
+-- analytics.order_items.product_id with no match in analytics.products
+-- Result: 0
+SELECT
+	COUNT(*)
+FROM analytics.order_items o
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM analytics.products p
+	WHERE o.product_id = p.product_id
+);
+
+-- analytics.order_items.order_id with no match in analytics.sales
+-- Result: 0
+SELECT
+	COUNT(*)
+FROM analytics.order_items o
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM analytics.sales s
+	WHERE o.order_id = s.order_id
+);
+
+-- analytics.sales.order_id with no match in analytics.order_items
+-- Result: 0
+SELECT
+	COUNT(*)
+FROM analytics.sales s
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM analytics.order_items o
+	WHERE o.order_id = s.order_id
+);
+
+-- analytics.customers with no orders in analytics.sales
+-- Result: 89
+SELECT
+	COUNT(*)
+FROM analytics.customers c
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM analytics.sales s
+	WHERE c.customer_id = s.customer_id
+);

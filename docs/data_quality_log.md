@@ -95,7 +95,7 @@
 | Campaign and coupon flags | `has_campaign` has 54,883 TRUE rows; `has_coupon` has 27,614 TRUE rows. | Keep the original nullable fields and use Boolean flags to identify non-NULL campaign and coupon values. | Complete |
 | Monetary rounding | The 8 planned monetary columns were rounded to 2 decimal places during insertion. `profit_margin_percentage` was left unchanged. | Apply the documented precision decisions in the analytics layer. | Complete |
 | Financial total validation | Total `net_sales` = 177,134,263.74; total `profit` = 76,146,395.76. Both match the expected totals from raw profiling and `dataset_statistics`. | Use `analytics.sales` for order-level financial analysis. | Complete |
-| Overall validation | All verification queries matched the expected results. | Use `analytics.sales` as the cleaned order-level table for subsequent analysis. | Complete |
+| Date range, decimals, boolean counts and structure | `order_date` runs 2021-01-01 to 2025-12-31. 0 rows with more than 2 decimals in the 8 rounded columns. `is_repeat_customer` has 137,782 TRUE and 334 FALSE. The table has 48 columns (46 source plus 2 flags) with DATE, TIME and BOOLEAN types as intended. | Use `analytics.sales` as the cleaned order-level table. | Complete |
 
 ### analytics.order_items
 
@@ -105,9 +105,9 @@
 | Order and product-pair counts | 138,116 distinct orders and 397,482 distinct `(order_id, product_id)` pairs across 397,569 rows. | Preserve repeated order-product pairs; do not impose uniqueness on the pair. | Complete |
 | Shipping-cost rounding | 0 rows have `shipping_cost` values differing from `ROUND(shipping_cost, 2)`. | Round shipping cost to two decimal places in the analytics layer. | Complete |
 | NULL validation | 0 NULLs in `order_id`, `product_id`, and `shipping_cost`. | No additional cleaning needed for these checks. | Complete |
-| Overall validation | All verification queries matched the expected results. | Use `analytics.order_items` for product-level analysis, alongside `analytics.sales` for order-level analysis. | Complete |
+| Totals, precision and structure | Total `net_sales` 192,398,877.29 and `profit` 82,698,038.55, identical to raw, so the documented 8.6% gap against `analytics.sales` is unchanged. `discount_percentage` kept at full precision (343,632 rows with more than 2 decimals, same as raw). The table has 12 columns. | Use `analytics.order_items` for product-level analysis only. | Complete |
 
-### `analytics.customers`
+### analytics.customers
 
 | Check | Expected result | Status |
 |---|---|---|
@@ -116,10 +116,11 @@
 | Customer ID uniqueness | 25,000 distinct customer IDs | Complete |
 | NULL customer IDs | 0 | Complete |
 | Source preservation | All 11 source columns and all source rows preserved | Complete |
+| Rows, keys and structure | 25,000 rows, 25,000 distinct `customer_id`, 0 NULL IDs. 11 columns, same as `raw.customer_master`. Includes the 89 customers with no orders. | None needed. Count active customers from `analytics.sales`. | Complete |
 
 No additional cleaning or transformations were required. All 25,000 customer records were retained, including the 89 customers who have no orders in the sales data.
 
-### `analytics.products`
+### analytics.products
 
 | Check | Expected result | Status |
 |---|---|---|
@@ -128,5 +129,14 @@ No additional cleaning or transformations were required. All 25,000 customer rec
 | Product ID uniqueness | 1,175 distinct product IDs | Complete |
 | NULL product IDs | 0 | Complete |
 | Source preservation | All 9 source columns and all source rows preserved | Complete |
+| Rows, keys and structure | 1,175 rows, 1,175 distinct `product_id`, 0 NULL IDs. 9 columns, same as `raw.product_catalog`. | Group by category and subcategory together, since 3 subcategories appear under 2 categories. | Complete |
 
 No additional cleaning or transformations were required. All 1,175 product records were retained, and category and subcategory values were preserved because some subcategories appear under multiple categories.
+
+### Analytics-layer relationships
+
+| Check | Finding | Decision | Status |
+|---|---|---|---|
+| Fact-to-dimension keys | 0 `analytics.sales` rows with a `customer_id` missing from `analytics.customers`. 0 `analytics.order_items` rows with a `product_id` missing from `analytics.products`. | Tables can be joined on `customer_id` and `product_id` without losing rows. | Complete |
+| Sales and order_items coverage | 0 `order_items` rows without a sales order and 0 sales orders without line items (138,116 orders in each). | Link on `order_id`, but never sum order-level columns after the join. | Complete |
+| Customers without orders | 89 customers in `analytics.customers` have no orders in `analytics.sales`. | Keep them in the dimension. Count active customers from `analytics.sales`. | Complete |
