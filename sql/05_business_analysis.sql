@@ -20,25 +20,14 @@ Each query: business question, result, takeaway (finding only if the data shows 
 -- and profit, and what share of net_sales is tax and shipping?
 
 -- Result:
--- Completed: 113,559 orders, Net Sales = 144,195,838.50,
---   Profit = 59,758,469.03, tax = 9.54% of Net Sales,
---   shipping = 1.75% of Net Sales, and 81.40% of total Net Sales.
--- Returned: 9,462 orders, Net Sales = 13,172,674.79,
---   Profit = 6,925,597.40, tax = 9.64%, shipping = 1.60%,
---   and 7.44% of total Net Sales.
--- Cancelled: 8,398 orders, Net Sales = 11,356,479.77,
---   Profit = 5,974,148.36, tax = 9.62%, shipping = 1.64%,
---   and 6.41% of total Net Sales.
--- Pending: 6,697 orders, Net Sales = 8,409,270.68,
---   Profit = 3,488,180.97, tax = 9.42%, shipping = 1.79%,
---   and 4.75% of total Net Sales.
+-- Completed orders account for 81.40% of total recorded Net Sales.
+-- Returned, Cancelled, and Pending orders account for the remaining
+-- 18.60%.
 
 -- Takeaway:
--- Completed orders account for 81.40% of total recorded Net Sales
--- and contribute the largest share of recorded profit.
--- Returned, Cancelled, and Pending orders together account for
--- 18.60% of total recorded Net Sales. Tax and shipping percentages
--- are relatively consistent across all four order statuses.
+-- Completed orders contribute the largest share of recorded Net Sales
+-- and Profit. Financial values for non-Completed orders should not
+-- automatically be interpreted as realized revenue or retained profit.
 SELECT
 	order_status,
 	COUNT(*) AS total_orders,
@@ -60,3 +49,151 @@ FROM analytics.sales
 GROUP BY order_status
 ORDER BY total_orders DESC;
 
+-- Q2. How do monthly Net Sales and Profit change over time?
+-- Result:
+-- December has the highest Net Sales in each of the five years, while
+-- February has the lowest. November and December occupy the top 10
+-- year-month periods by Net Sales.
+
+-- Takeaway:
+-- The recurring year-end peak and February slowdown may inform inventory,
+-- staffing, and marketing plans. Further analysis is needed to explain
+-- the underlying causes and differences in Profit performance.
+SELECT
+	DATE_TRUNC('month', order_date) AS year_month,
+	COUNT(*) AS total_orders,
+	SUM(net_sales) AS total_net_sales,
+	SUM(profit) AS total_profit
+FROM analytics.sales
+GROUP BY DATE_TRUNC('month', order_date)
+ORDER BY DATE_TRUNC('month', order_date);
+
+-- Q2a. Which year-month periods have the highest Net Sales?
+-- Supporting query: Returns the 10 year-month periods with the highest
+-- recorded Net Sales.
+SELECT
+	DATE_TRUNC('month', order_date) AS year_month,
+	COUNT(*) AS total_orders,
+	SUM(net_sales) AS total_net_sales,
+	SUM(profit) AS total_profit
+FROM analytics.sales
+GROUP BY DATE_TRUNC('month', order_date)
+ORDER BY total_net_sales DESC
+LIMIT 10;
+
+-- Q2b. Which year-month periods have the lowest Net Sales?
+-- Supporting query: Returns the 10 year-month periods with the lowest
+-- recorded Net Sales.
+SELECT
+	DATE_TRUNC('month', order_date) AS year_month,
+	COUNT(*) AS total_orders,
+	SUM(net_sales) AS total_net_sales,
+	SUM(profit) AS total_profit
+FROM analytics.sales
+GROUP BY DATE_TRUNC('month', order_date)
+ORDER BY total_net_sales
+LIMIT 10;
+
+-- Q2c. Which calendar months have the highest and lowest average monthly Net Sales and Profit across 2021–2025?
+-- Result:
+-- December has the highest average monthly Net Sales (4,659,691.51)
+-- and Profit (1,535,276.05) across 2021–2025. February has the lowest
+-- average for both measures.
+
+-- Takeaway:
+-- These averages reinforce the seasonal pattern observed in the monthly
+-- results and can help guide planning. The underlying causes still need
+-- further investigation.
+WITH monthly_totals AS (
+	SELECT
+		DATE_TRUNC('month', order_date) AS year_month,
+		COUNT(*) AS total_orders,
+		SUM(net_sales) AS total_net_sales,
+		SUM(profit) AS total_profit
+	FROM analytics.sales
+	GROUP BY DATE_TRUNC('month', order_date)
+)
+SELECT
+	EXTRACT('month' FROM year_month) AS month,
+	ROUND(AVG(total_orders),2) AS avg_orders,
+	ROUND(AVG(total_net_sales),2) AS avg_net_sales,
+	ROUND(AVG(total_profit),2) AS avg_profit
+FROM monthly_totals
+GROUP BY EXTRACT('month' FROM year_month)
+ORDER BY avg_net_sales DESC;
+
+-- Q3. Which product categories and subcategories generate the most
+-- sales and profit?
+
+-- Result:
+-- Electronics - Smartphones ranks first by both Net Sales (7,651,215.85)
+-- and recorded Profit (2,747,675.09). Electronics - TVs ranks second in both.
+-- Grocery - Snacks has the highest recorded profit margin among
+-- the category/subcategory combinations (61.74%), while Electronics -
+-- Tablets has the lowest (32.18%).
+-- Home Appliances - Washing Machines appears in the top 10 by Profit
+-- but not by Net Sales.
+
+-- Takeaway:
+-- Smartphones and TVs lead in total recorded financial contribution,
+-- while margin rankings highlight different aspects of performance.
+-- High total Profit does not necessarily mean a high profit margin;
+-- further analysis could investigate the differences.
+
+-- Top 10 product combinations by Net Sales
+SELECT
+	p.product_category,
+	p.product_subcategory,
+	COUNT(*) AS order_line_count,
+	COUNT(DISTINCT o.order_id) AS distinct_order_count,
+	SUM(o.net_sales) AS total_net_sales,
+	SUM(o.profit) AS total_profit
+FROM analytics.products AS p
+INNER JOIN analytics.order_items AS o
+	ON p.product_id = o.product_id
+GROUP BY p.product_category, p.product_subcategory
+ORDER BY total_net_sales DESC
+LIMIT 10;
+
+-- Top 10 product combinations by Profit
+SELECT
+	p.product_category,
+	p.product_subcategory,
+	COUNT(*) AS order_line_count,
+	COUNT(DISTINCT o.order_id) AS distinct_order_count,
+	SUM(o.net_sales) AS total_net_sales,
+	SUM(o.profit) AS total_profit
+FROM analytics.products AS p
+INNER JOIN analytics.order_items AS o
+	ON p.product_id = o.product_id
+GROUP BY p.product_category, p.product_subcategory
+ORDER BY total_profit DESC
+LIMIT 10;
+
+-- Top 10 product combinations by profit margin
+SELECT
+	p.product_category,
+	p.product_subcategory,
+	COUNT(*) AS order_line_count,
+	COUNT(DISTINCT o.order_id) AS distinct_order_count,
+	ROUND(100.0 * SUM(o.profit) / SUM(o.net_sales),2)  AS profit_margin
+FROM analytics.products AS p
+INNER JOIN analytics.order_items AS o
+	ON p.product_id = o.product_id
+GROUP BY p.product_category, p.product_subcategory
+ORDER BY profit_margin DESC
+LIMIT 10;
+
+-- Bottom 10 product combinations by profit margin
+SELECT
+	p.product_category,
+	p.product_subcategory,
+	COUNT(*) AS order_line_count,
+	COUNT(DISTINCT o.order_id) AS distinct_order_count,
+	ROUND(100.0 * SUM(o.profit) / SUM(o.net_sales),2)  AS profit_margin
+FROM analytics.products AS p
+INNER JOIN analytics.order_items AS o
+	ON p.product_id = o.product_id
+GROUP BY p.product_category, p.product_subcategory
+ORDER BY profit_margin
+LIMIT 10;
