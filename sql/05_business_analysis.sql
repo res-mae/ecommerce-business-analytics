@@ -179,3 +179,107 @@ INNER JOIN analytics.sales AS s
 WHERE s.order_status = 'Completed'
 GROUP BY p.product_category, p.product_subcategory
 ORDER BY net_sales_rank;
+
+-- Q4. Can is_repeat_customer or customer_order_count be used to separate repeat from one-time customers?
+-- Scope: all order statuses (a customer counts every order, including Cancelled and Pending)
+
+-- Q4a. How many orders does each customer have?
+-- Result: 24,911 customers and 138,116 orders. 524 customers (2.10%) have exactly 1 order.
+-- The rest have 2 to 19 orders. 3,942 customers have 6 orders and 4,288 have 5, the most common counts.
+-- The 334 FALSE rows in is_repeat_customer do not match the 524 one-order customers.
+WITH per_customer AS (
+	SELECT
+		customer_id,
+		COUNT(*) AS order_count
+	FROM analytics.sales
+	GROUP BY customer_id
+)
+SELECT
+	order_count,
+	COUNT(*) AS customers
+FROM per_customer
+GROUP BY order_count
+ORDER BY order_count;
+
+-- Q4b. Is customer_order_count constant within each customer?
+-- Result: 0 rows, so every customer has the same customer_order_count on all of their rows.
+SELECT
+	customer_id,
+	COUNT(DISTINCT customer_order_count) AS distinct_order_count
+FROM analytics.sales
+GROUP BY customer_id
+HAVING COUNT(DISTINCT customer_order_count) > 1;
+
+-- Q4c. Does customer_order_count equal the actual number of orders per customer?
+-- Result: stored minus actual is 0 for 15,487 customers (62.2%) and above 0 for 9,424 (37.8%):
+-- +1 for 7,367, +2 for 1,732, +3 for 288, +4 for 35, +5 for 2. It is never below the actual count.
+-- Cause unknown.
+
+-- Takeaway:
+-- Decision: define repeat customers from the actual order count (1 order = one-time, 2 or more = repeat).
+-- customer_order_count and is_repeat_customer are kept as reported fields and not used here.
+WITH per_customer AS (
+	SELECT
+		customer_id,
+		COUNT(*) AS actual_orders,
+		MAX(customer_order_count) AS stored_count
+	FROM analytics.sales
+	GROUP BY customer_id
+)
+SELECT
+	stored_count - actual_orders AS diff,
+	COUNT(*) AS customers
+FROM per_customer
+GROUP BY stored_count - actual_orders
+ORDER BY diff;
+
+-- Q4d. How do customers compare by order frequency, and does value rise with it?
+-- Scope: all order statuses. Customers are grouped by actual order count (see Q4c).
+
+-- Result:
+-- One-time customers: 524 (2.10%) with 0.38% of Net Sales. The other 24,387 customers (97.90%) hold 99.62%.
+-- Net Sales per customer: 1,270.86 (1 order) | 4,229.89 (2-4) | 8,300.28 (5-9) | 13,827.93 (10+).
+-- Net Sales per order: 1,270.86 | 1,286.40 | 1,281.59 | 1,281.69 (within 1.2% across bands).
+-- Profit-to-Net-Sales: 44.12% (1 order) and 42.90% to 43.01% in the other bands.
+-- The 5-9 band is the largest: 14,807 customers and 69.38% of Net Sales.
+
+-- Takeaway:
+-- Finding: Net Sales per order is about the same in every band, so customer value rises with
+-- order frequency, not with order size.
+-- Caveat: only 524 customers are one-time, so that band's ratios (including 44.12%) are less reliable.
+WITH per_customer AS (
+	SELECT
+		customer_id,
+		COUNT(*) AS order_count,
+		SUM(net_sales) AS net_sales,
+		SUM(profit) AS profit
+	FROM analytics.sales
+	GROUP BY customer_id
+),
+banded AS (
+	SELECT
+		*,
+		CASE
+			WHEN order_count = 1 THEN '1. one order'
+			WHEN order_count BETWEEN 2 AND 4 THEN '2. 2-4 orders'
+			WHEN order_count BETWEEN 5 AND 9 THEN '3. 5-9 orders'
+			ELSE '4. 10 or more orders'
+		END AS order_band
+	FROM per_customer
+)
+SELECT
+	order_band,
+	COUNT(*) AS customers,
+	SUM(order_count) AS orders,
+	SUM(net_sales) AS total_net_sales,
+	SUM(profit) AS total_profit,
+	ROUND(SUM(net_sales) / COUNT(*), 2) AS net_sales_per_customer,
+	ROUND(SUM(net_sales) / SUM(order_count), 2) AS net_sales_per_order,
+	ROUND(100.0 * SUM(profit) / NULLIF(SUM(net_sales), 0), 2) AS profit_to_net_sales_pct,
+	ROUND(100.0 * SUM(net_sales) / SUM(SUM(net_sales)) OVER (), 2) AS net_sales_share_pct
+FROM banded
+GROUP BY order_band
+ORDER BY order_band;
+
+
+
