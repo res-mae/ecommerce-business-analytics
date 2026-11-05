@@ -9,10 +9,12 @@ Running list of results supported by the data. Each links to a query in `sql/05_
 - **Q2a:** No sustained growth or decline. Orders stay within 27,554 to 27,768 and Net Sales change by at most 1.2% per year.
 - **Q3:** Smartphones, TVs and Smart Watches lead Net Sales and Profit (Completed orders). All 8 Electronics subcategories have the lowest margins (30.42% to 34.27%), while Grocery - Snacks has the highest (60.74%).
 - **Q4:** 97.90% of customers (24,387) placed 2 or more orders. Net Sales per order is about the same across order-count bands (1,271 to 1,286), so customer value follows order frequency, not order size.
+- **Q5:** Segment Net Sales follow segment size (Consumer 54.87%). Net Sales per customer and per order are within about 1.5% across segments, so VIP and Premium are not higher value per customer. Premium and VIP are discounted about 4.5 points deeper (about 20% of gross sales vs about 15.6%).
 
 ## Open questions
-- Why discounts are deeper in Nov, Dec, Jul and Sep, and whether they lift orders (July orders are not higher than June or August).
-- Why Electronics margins are lower than other categories.
+- Why are discounts deeper in November, December, July, and September, and do they lead to higher order volumes? (July orders are not higher than those in June or August.)
+- Why are profit margins in Electronics lower than in other categories?
+- Why do Premium and VIP customers receive higher discounts?
 
 ## Limitations
 - No data dictionary. Meanings of `net_sales`, `tax_amount`, `shipping_cost` and `profit` are inferred from arithmetic. `profit` includes tax.

@@ -72,9 +72,8 @@ ORDER BY total_orders DESC;
 
 -- Takeaway:
 -- Finding: Net Sales peak in November and December and are lowest in February every year.
--- Finding: the Profit peak is much smaller than the Net Sales peak, because the profit ratio
--- falls in the months with deeper discounts (Nov, Dec, Jul, Sep). Product cost stays at 
--- 51% to 52% of gross sales.
+-- Finding: The profit ratio falls in the months with deeper discounts. 
+-- Product cost stays at 51% to 52% of gross sales, so the discount drives the ratio.
 -- Open question: why discounts are deeper in those months, and whether they lift orders
 -- (July orders are not higher than June or August). Not explained by this data.
 SELECT
@@ -281,5 +280,56 @@ FROM banded
 GROUP BY order_band
 ORDER BY order_band;
 
+-- Q5a. Do customer attributes agree between analytics.sales and analytics.customers?
+-- Scope: all order rows in analytics.sales (138,116), joined on customer_id.
+-- Result: 0 rows differ in customer_segment, customer_age, gender, customer_city, customer_state,
+-- customer_country, region or customer_postal_code.
+-- Takeaway: either table can supply customer attributes. Q5 uses analytics.sales so totals tie back to Q1.
+SELECT
+	COUNT(*) FILTER (WHERE s.customer_segment IS DISTINCT FROM c.customer_segment) AS segment_mismatch,
+	COUNT(*) FILTER (WHERE s.customer_age IS DISTINCT FROM c.customer_age) AS age_mismatch,
+	COUNT(*) FILTER (WHERE s.gender IS DISTINCT FROM c.gender) AS gender_mismatch,
+	COUNT(*) FILTER (WHERE s.customer_city IS DISTINCT FROM c.customer_city) AS city_mismatch,
+	COUNT(*) FILTER (WHERE s.customer_state IS DISTINCT FROM c.customer_state) AS state_mismatch,
+	COUNT(*) FILTER (WHERE s.customer_country IS DISTINCT FROM c.customer_country) AS country_mismatch,
+	COUNT(*) FILTER (WHERE s.region IS DISTINCT FROM c.region) AS region_mismatch,
+	COUNT(*) FILTER (WHERE s.customer_postal_code IS DISTINCT FROM c.customer_postal_code) AS postal_code_mismatch
+FROM analytics.sales AS s
+INNER JOIN analytics.customers AS c
+	ON s.customer_id = c.customer_id;
 
+-- Q5. Which customer segments hold the most value?
+-- Scope: all order statuses, with Completed-only Net Sales shown alongside.
+
+-- Result:
+-- Net Sales share: Consumer 54.87% | Premium 24.99% | VIP 10.11% | Business 10.03%.
+-- Customers: Consumer 13,585 | Premium 6,275 | VIP 2,536 | Business 2,515 (24,911 in total).
+-- Net Sales per customer: 7,054.95 to 7,155.02. Per order: 1,274.10 to 1,289.13.
+-- Orders per customer: 5.48 to 5.57.
+-- Profit-to-Net-Sales: Consumer 44.05% | Business 43.82% | VIP 41.15% | Premium 41.06%.
+-- Discount as % of gross sales: Premium 20.23% | VIP 20.20% | Business 15.78% | Consumer 15.55%.
+-- On Completed-only Net Sales the ranking is the same (Consumer 54.98% | Premium 24.86% | VIP 10.14% | Business 10.02%).
+
+-- Takeaway:
+-- Finding: segment totals follow the number of customers. Net Sales per customer and per order differ by
+-- about 1.4% and 1.2% across segments, so VIP and Premium are not higher value per customer here.
+-- Finding: Premium and VIP are discounted about 4.5 points deeper, and their profit ratio is about 3 points
+-- lower. This follows largely from the discount, because profit = gross - discount + tax - cost.
+-- Open question: why Premium and VIP are discounted more. Not explained by this data.
+SELECT
+	customer_segment,
+	COUNT(DISTINCT customer_id) AS total_customer,
+	COUNT(*) AS total_orders,
+	SUM(net_sales) AS total_net_sales,
+	SUM(profit) AS total_profit,
+	ROUND(SUM(net_sales) / COUNT(DISTINCT customer_id),2) AS net_sales_per_customer,
+	ROUND(SUM(net_sales) / COUNT(*),2) AS net_sales_per_order,
+	ROUND(SUM(profit) * 100.0 / NULLIF(SUM(net_sales),0),2) AS profit_pct_of_net_sales,
+	ROUND(SUM(net_sales) * 100 / SUM(SUM(net_sales)) OVER (),2) AS share_pct_of_net_sales,
+	ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT customer_id),2) AS orders_per_customer,
+	ROUND(SUM(discount_amount) * 100.0 / NULLIF(SUM(gross_sales),0),2) AS discount_to_gross_pct,
+	SUM(net_sales) FILTER (WHERE order_status = 'Completed') AS completed_only_net_sales
+FROM analytics.sales
+GROUP BY customer_segment
+ORDER BY total_net_sales DESC;
 
