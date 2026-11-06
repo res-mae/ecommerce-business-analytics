@@ -333,3 +333,93 @@ FROM analytics.sales
 GROUP BY customer_segment
 ORDER BY total_net_sales DESC;
 
+-- Q6a. Where are returns and cancellations concentrated?
+-- Scope: all orders. Rates are % of orders in each group. Overall: Returned 6.85%, Cancelled 6.08%.
+
+-- Result:
+-- By segment: Returned (Consumer 6.84% | Business 7.06% | VIP 6.69% | Premium 6.85%), 
+--   Cancelled (Consumer 6.02% | Business 6.00% | VIP 6.25% | Premium 6.18%).
+-- By channel: Returned (Marketplace 6.93% | Mobile App 6.91% | Social Media 6.41% | Website 6.87%), 
+--   Cancelled (Marketplace 6.19% | Mobile App 6.02% | Social Media 6.03% | Website 6.12%).
+-- Segment x channel (16 groups): Returned 5.72% to 7.40%, Cancelled 5.67% to 6.73%.
+
+-- Takeaway:
+-- Finding: Returned and Cancelled rates are close to the overall 6.85% and 6.08% in every segment
+-- and channel (segments 6.69% to 7.06% and 6.00% to 6.25%).
+-- Observation: Social Media has the lowest return rate (6.41%) against 6.87% to 6.93% elsewhere.
+-- Check its order count in the output. A gap of about 0.4 points on a group of ~30,000 orders is
+-- larger than chance alone would usually produce. Cause unknown, and not tested.
+-- Caveat: the 16-group grid has small groups, so gaps of about 1 point are within chance.
+SELECT
+	customer_segment,
+	sales_channel,
+	COUNT(*) AS total_orders,
+	COUNT(*) FILTER (WHERE order_status = 'Returned') AS returned_orders,
+	COUNT(*) FILTER (WHERE order_status = 'Cancelled') AS cancelled_orders,
+	ROUND(COUNT(*) FILTER (WHERE order_status = 'Returned') * 100.0 / COUNT(*),2) AS returned_rate,
+	ROUND(COUNT(*) FILTER (WHERE order_status = 'Cancelled') * 100.0 / COUNT(*),2) AS cancelled_rate
+FROM analytics.sales
+GROUP BY GROUPING SETS (
+	(customer_segment, sales_channel),
+	(customer_segment),
+	(sales_channel),
+	()
+)
+ORDER BY 
+	GROUPING(customer_segment),
+	GROUPING(sales_channel);
+
+-- Q6b. How do ratings and order value differ by delivery status?
+-- Scope: Completed orders only (113,559). Returned, Cancelled and Pending orders have no delivery data.
+
+-- Result:
+-- Orders: On Time 86,916 | Delayed 16,886 | Early 9,757.
+-- Average rating: Early 4.02 | On Time 3.73 | Delayed 3.22.
+-- Net Sales per order: Early 1,275.48 | Delayed 1,270.58 | On Time 1,268.99.
+
+-- Takeaway:
+-- Finding: later delivery is associated with lower ratings (Delayed 3.22 vs On Time 3.73 vs Early 4.02).
+-- Finding: order value is about the same across delivery statuses, so the rating gap is not an order-size effect.
+-- Caveat: association only. The data does not show that delays cause the lower ratings.
+SELECT
+	delivery_status,
+	COUNT(*) AS total_orders,
+	ROUND(AVG(customer_rating),2) AS avg_customer_rating,
+	ROUND(SUM(net_sales) / COUNT(*),2) AS net_sales_per_order
+FROM analytics.sales
+WHERE order_status = 'Completed'
+GROUP BY delivery_status
+ORDER BY net_sales_per_order;
+
+-- Q6c. Does delivery_status agree with delivery_days versus estimated_delivery_days?
+-- Scope: Completed orders only (113,559).
+-- Result: On Time and Delayed labels match the days comparison for every order
+-- (Delayed = 1 to 4 days late, Early = 1 to 2 days early, On Time = 0).
+-- 511 orders (0.45%) are labeled Early but were delivered on the estimated day (difference 0).
+-- Takeaway:
+-- Finding: delivery_status matches the days comparison for 99.55% of Completed orders.
+-- Open question: why 511 orders are labeled Early with no day difference. Not explained by this data.
+WITH status AS (
+	SELECT
+		delivery_status,
+	 	CASE 
+			WHEN delivery_days > estimated_delivery_days THEN 'Delayed'
+			WHEN delivery_days < estimated_delivery_days THEN 'Early'
+			WHEN delivery_days = estimated_delivery_days THEN 'On Time'
+		END AS expected_delivery_status,
+		delivery_days - estimated_delivery_days AS day_difference
+	FROM analytics.sales
+	WHERE order_status = 'Completed'
+)
+SELECT
+	delivery_status,
+	expected_delivery_status,
+	COUNT(*) AS total_orders,
+	MIN(day_difference) AS min_day_difference,
+	MAX(day_difference) AS max_day_difference
+FROM status
+GROUP BY 
+	delivery_status,
+	expected_delivery_status
+ORDER BY total_orders DESC;
+
