@@ -12,12 +12,17 @@ Running list of results supported by the data. Each links to a query in `sql/05_
 - **Q5:** Segment Net Sales follow segment size (Consumer 54.87%). Net Sales per customer and per order are within about 1.5% across segments, so VIP and Premium are not higher value per customer. Premium and VIP are discounted about 4.5 points deeper (about 20% of gross sales vs about 15.6%).
 - **Q6a:** Returned and Cancelled rates stay close to the overall 6.85% and 6.08% in every segment and channel.
 - **Q6b:** Among Completed orders, ratings fall with later delivery (Early 4.02, On Time 3.73, Delayed 3.22). Order value is about the same in all three statuses.
+- **EDA:** Net Sales per order is right-skewed (median 950.76, mean 1,282.50, max 16,218.00). Per-order averages in Q4 to Q6b are means, so they are pulled up by large orders.
+- **EDA:** Median Net Sales per order is 943 to 960 across segments and 934 to 945 across delivery statuses (Completed), so the "about the same per order" findings hold on medians.
+- **EDA:** Discounts shift as a whole by period (median per order: Nov-Dec 29.5%, July 21.3%, September 14.1%, other eight months 9.8%), while the share of orders with no discount stays about 12.9% in every period. 67.0% of orders discounted above 20% fall in Nov-Dec, which hold 24.3% of orders.
+- **EDA:** Premium and VIP orders are discounted more even in the eight months without seasonal discounting (median 11.7% and 12.1% vs 8.9% and 9.0%).
 
 ## Open questions
 - Why are discounts deeper in November, December, July, and September, and do they lead to higher order volumes? (July orders are not higher than those in June or August.)
 - Why are profit margins in Electronics lower than in other categories?
 - Why do Premium and VIP customers receive higher discounts?
 - Why are 511 completed orders labeled as “Early” when there is no difference in the estimated delivery date?
+- Returned and Cancelled orders are larger on average and have a higher profit ratio. Cause unknown.
 
 ## Limitations
 - No data dictionary. Meanings of `net_sales`, `tax_amount`, `shipping_cost` and `profit` are inferred from arithmetic. `profit` includes tax.

@@ -346,9 +346,8 @@ ORDER BY total_net_sales DESC;
 -- Takeaway:
 -- Finding: Returned and Cancelled rates are close to the overall 6.85% and 6.08% in every segment
 -- and channel (segments 6.69% to 7.06% and 6.00% to 6.25%).
--- Observation: Social Media has the lowest return rate (6.41%) against 6.87% to 6.93% elsewhere.
--- Check its order count in the output. A gap of about 0.4 points on a group of ~30,000 orders is
--- larger than chance alone would usually produce. Cause unknown, and not tested.
+-- Observation: Social Media has the lowest return rate (6.41%) against 6.87% to 6.93% in the other channels.
+-- Not tested for significance. Cause unknown.
 -- Caveat: the 16-group grid has small groups, so gaps of about 1 point are within chance.
 SELECT
 	customer_segment,
@@ -389,7 +388,7 @@ SELECT
 FROM analytics.sales
 WHERE order_status = 'Completed'
 GROUP BY delivery_status
-ORDER BY net_sales_per_order;
+ORDER BY avg_customer_rating DESC;
 
 -- Q6c. Does delivery_status agree with delivery_days versus estimated_delivery_days?
 -- Scope: Completed orders only (113,559).
