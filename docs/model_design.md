@@ -11,7 +11,7 @@ Facts, relationships and measure rules follow the grain of each table and the de
 | `analytics.order_items` | Fact (order line) | One row per order line | None. `(order_id, product_id)` repeats for 87 pairs, so it is not unique | 397,569 |
 | `analytics.customers` | Dimension | One row per customer | `customer_id` | 25,000 |
 | `analytics.products` | Dimension | One row per product | `product_id` | 1,175 |
-| `analytics.dates` | Dimension | One row per day | `date` | to be built |
+| `analytics.dates` | Dimension | One row per day | `date` | 1,826 |
 
 ## 2. Relationships
 
