@@ -502,3 +502,74 @@ WHERE NOT EXISTS (
 	FROM analytics.sales s
 	WHERE c.customer_id = s.customer_id
 );
+
+-- Builds analytics.dates
+-- Dates from 2021-01-01 to 2025-12-31
+DROP TABLE IF EXISTS analytics.dates;
+
+CREATE TABLE analytics.dates (
+	date          DATE    PRIMARY KEY,
+	year          INT,
+	quarter       INT,
+	month_number  INT,
+	month_name    TEXT
+);
+
+INSERT INTO analytics.dates (
+	date,
+	year,
+	quarter,
+	month_number,
+	month_name
+)
+SELECT
+	d::DATE AS date,
+	EXTRACT(YEAR FROM d)::INT AS year,
+	EXTRACT(QUARTER FROM d)::INT AS quarter,
+	EXTRACT(MONTH FROM d)::INT AS month_number,
+	TRIM(TO_CHAR(d, 'Month')) AS month_name
+FROM GENERATE_SERIES (
+    DATE '2021-01-01',
+    DATE '2025-12-31',
+    INTERVAL '1 day'
+) AS d;
+
+
+-- analytics.dates: Verify dates table
+-- Result: row count 1826 | min. date 2021-01-01 | max. date 2025-12-31
+SELECT 
+	COUNT(*) AS row_count,
+	MIN(date) AS min_date,
+	MAX(date) AS max_date
+FROM analytics.dates;
+
+-- analytics.dates: Verify day gap
+-- Result: row count 1826 | expected_date_count 1826
+-- no day-to-day difference exceeds 1
+SELECT
+	COUNT(*) AS row_count,
+	MAX(date) - MIN(date) + 1 AS expected_date_count
+FROM analytics.dates;
+
+-- analytics.dates: Verify month_name character length
+-- Result: 12 rows, each length equals the month name's own length (no padding)
+--   1 January 7 | 2 February 8 | 3 March 5 | 4 April 5 | 5 May 3 | 6 June 4
+--   7 July 4 | 8 August 6 | 9 September 9 | 10 October 7 | 11 November 8 | 12 December 8
+SELECT
+	month_number,
+	month_name,
+	LENGTH(month_name) AS length_month_name
+FROM analytics.dates
+GROUP BY month_number, month_name
+ORDER BY month_number;
+
+-- analytics.sales with no order_date in analytics.dates
+-- Result: 0
+SELECT
+	COUNT(*)
+FROM analytics.sales AS s
+WHERE NOT EXISTS (
+	SELECT 1
+	FROM analytics.dates AS d
+	WHERE s.order_date = d.date
+);

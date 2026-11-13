@@ -133,6 +133,11 @@ No additional cleaning or transformations were required. All 25,000 customer rec
 
 No additional cleaning or transformations were required. All 1,175 product records were retained, and category and subcategory values were preserved because some subcategories appear under multiple categories.
 
+### analytics.dates
+| Check | Finding | Decision | Status |
+|---|---|---|---|
+| month_name padding | TO_CHAR(d, 'Month') returned names padded to 9 characters (length 9 for all 12 months) | Applied TRIM; after fix lengths are 3 to 9 and match the real names | Complete |
+
 ### Analytics-layer relationships
 
 | Check | Finding | Decision | Status |
