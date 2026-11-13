@@ -30,4 +30,3 @@ Running list of results supported by the data. Each links to a query in `sql/05_
 - `is_repeat_customer` and `customer_order_count` don't match actual orders (the count is up to 5 above the actual for 37.8% of customers), so repeat customers are defined from actual order counts.
 - Delivery and rating analysis covers the 113,559 Completed orders only.
 - 511 Completed orders (5.2% of the Early group) are labeled Early but were delivered on the estimated day. Delivery results use `delivery_status` as given.
-- Delivery and rating results cover the 113,559 Completed orders only.
