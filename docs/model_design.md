@@ -28,6 +28,11 @@ Crow's foot notation. Each marker shows how many rows of the table at that end a
 
 All relationships are single-direction, one-to-many. Power BI does not enforce optionality, so the diagram documents the data.
 
+### Verified in Power BI
+
+Load (Import mode): sales 138,116 | order_items 397,569 | customers 25,000 | products 1,175 | dates 1,826 rows, matching the SQL counts.
+All four relationships exist in `relationships.tmdl`, and the Model view shows them as many-to-one, active, single direction. `dates[date]` to `sales[order_date]` was created manually, the other three were auto-detected.
+
 ## 3. Rules that prevent double-counting
 
 1. **Order-level measures use `sales` only.** Net Sales, Profit, orders, AOV, returns, cancellations and delivery are all measured on `analytics.sales`, which reconciles with `dataset_statistics`.
@@ -37,7 +42,7 @@ All relationships are single-direction, one-to-many. Power BI does not enforce o
 5. **Group products by `product_category` and `product_subcategory` together.** Three subcategory names (Storage, Watches, Furniture) appear under two categories each.
 6. **Count active customers with a distinct count of `sales[customer_id]`**, not rows in `customers`, which includes 89 customers who never ordered.
 
-## 3. Columns to hide or avoid
+## 4. Columns to hide or avoid
 
 | Table | Columns | Reason |
 |---|---|---|
@@ -46,7 +51,7 @@ All relationships are single-direction, one-to-many. Power BI does not enforce o
 | `sales` | `order_id` (as a slicer) | High cardinality |
 | `order_items` | `order_id` | Used only for the relationship |
 
-## 4. Measures
+## 5. Measures
 
 Defined in DAX. Net Sales and Profit are dataset-defined measures with no data dictionary, and `profit` includes tax.
 
@@ -68,27 +73,27 @@ Defined in DAX. Net Sales and Profit are dataset-defined measures with no data d
 
 Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76, Orders 138,116, Active Customers 24,911, AOV 1,282.50, Return Rate 6.85%, Cancellation Rate 6.08%.
 
-## 5. Scope rules for reports
+## 6. Scope rules for reports
 
 - **Order status:** headline measures include all statuses so they reconcile with `dataset_statistics`. They are recorded values, not realized revenue. Show a status slicer or a Completed-only variant next to them.
 - **Product and category pages:** Completed orders only, through the `sales` to `order_items` relationship (decision 2026-11-03).
 - **Delivery and rating pages:** Completed orders only. Returned, Cancelled and Pending orders have no delivery data.
 - **Repeat vs one-time customers:** defined from actual order counts in `analytics.sales` (1 order = one-time).
 
-## 6. Decisions
+## 7. Decisions
 
 | Decision | Choice | Reason |
 |---|---|---|
 | Date table | Build `analytics.dates` in SQL | Reproducible, consistent with the rest of the project. Turn off Power BI auto date/time |
 | `sales` to `order_items` relationship | Keep it, single direction | Lets Completed-only filters reach product visuals. The risk is cross-filter mistakes, handled by the rules in section 2 |
 
-## 7. Pages
+## 8. Pages
 
 1. **Executive Overview:** headline measures, monthly trend, status mix.
 2. **Product and Sales Performance:** categories and subcategories (Completed orders, items basis).
 3. **Customer Behavior:** segments, order-frequency bands, returns.
 
-## 8. Known limitations
+## 9. Known limitations
 
 - No data dictionary. Meanings of `net_sales`, `tax_amount`, `shipping_cost` and `profit` are inferred from arithmetic.
 - `analytics.order_items` and `analytics.sales` do not reconcile (about 8.6%, cause unknown).

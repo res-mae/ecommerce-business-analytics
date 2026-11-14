@@ -8,3 +8,7 @@ data/raw/*
 data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+*.pbix
+
+# Power BI local files (cache embeds the data)
+powerbi/**/.pbi/
