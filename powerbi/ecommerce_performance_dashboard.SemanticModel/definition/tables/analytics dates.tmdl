@@ -1,8 +1,10 @@
 table 'analytics dates'
 	lineageTag: bda9c0f6-7c6c-4126-9d1c-514d2e80a905
+	dataCategory: Time
 
 	column date
 		dataType: dateTime
+		isKey
 		formatString: Long Date
 		lineageTag: e42223cb-e6cf-42f7-aba9-d73c6fa23271
 		summarizeBy: none
@@ -44,6 +46,9 @@ table 'analytics dates'
 		lineageTag: 66b6319c-0081-4c06-8916-324132d23d82
 		summarizeBy: none
 		sourceColumn: month_name
+		sortByColumn: month_number
+
+		changedProperty = SortByColumn
 
 		annotation SummarizationSetBy = Automatic
 

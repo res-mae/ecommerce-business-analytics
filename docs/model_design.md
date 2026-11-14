@@ -51,6 +51,12 @@ All four relationships exist in `relationships.tmdl`, and the Model view shows t
 | `sales` | `order_id` (as a slicer) | High cardinality |
 | `order_items` | `order_id` | Used only for the relationship |
 
+### Model settings applied in Power BI
+
+- `analytics dates` is marked as the date table (`dataCategory: Time`, `date` set as key). `month_name` is sorted by `month_number`; the test visual showed January to December.
+- Hidden columns: 11 in `sales` (8 customer duplicates, `is_repeat_customer`, `customer_order_count`, `order_id`) and 1 in `order_items` (`order_id`), as listed in section 4. Hidden columns remain usable in DAX.
+- Auto date/time is disabled (Options > Current File).
+
 ## 5. Measures
 
 Defined in DAX. Net Sales and Profit are dataset-defined measures with no data dictionary, and `profit` includes tax.
