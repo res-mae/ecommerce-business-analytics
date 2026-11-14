@@ -1,0 +1,16 @@
+relationship AutoDetected_b6379f2c-812e-49b8-a7d6-f211da19fe30
+	fromColumn: 'analytics sales'.customer_id
+	toColumn: 'analytics customers'.customer_id
+
+relationship AutoDetected_212590b6-123b-4cc1-b952-b75b4173a8a0
+	fromColumn: 'analytics order_items'.order_id
+	toColumn: 'analytics sales'.order_id
+
+relationship AutoDetected_b262cee3-39f7-41ba-bba0-8d84f3401852
+	fromColumn: 'analytics order_items'.product_id
+	toColumn: 'analytics products'.product_id
+
+relationship 76f8e46f-d440-8ec4-1603-dfe2e8d42c2b
+	fromColumn: 'analytics sales'.order_date
+	toColumn: 'analytics dates'.date
+

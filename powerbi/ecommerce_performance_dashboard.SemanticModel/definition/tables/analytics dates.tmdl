@@ -1,0 +1,58 @@
+table 'analytics dates'
+	lineageTag: bda9c0f6-7c6c-4126-9d1c-514d2e80a905
+
+	column date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: e42223cb-e6cf-42f7-aba9-d73c6fa23271
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: 8f03399e-4357-4bd0-9450-dffa47b211e6
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: d3d9d98e-744d-46d5-b790-0cb71c430285
+		summarizeBy: none
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_number
+		dataType: int64
+		formatString: 0
+		lineageTag: 6ca89db5-09e4-4020-8b48-d9cb25d61dd6
+		summarizeBy: none
+		sourceColumn: month_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column month_name
+		dataType: string
+		lineageTag: 66b6319c-0081-4c06-8916-324132d23d82
+		summarizeBy: none
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'analytics dates' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost", "ecommerce_analytics"),
+				    analytics_dates = Source{[Schema="analytics",Item="dates"]}[Data]
+				in
+				    analytics_dates
+

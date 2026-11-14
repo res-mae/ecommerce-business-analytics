@@ -1,0 +1,104 @@
+table 'analytics customers'
+	lineageTag: dd22fafa-a126-47e0-bb89-41210706dc0e
+
+	column customer_id
+		dataType: string
+		lineageTag: 28a9ef70-3287-4877-96e8-89cd85a67473
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_name
+		dataType: string
+		lineageTag: b08507ec-3dae-4df9-a058-0f9f298cfc88
+		summarizeBy: none
+		sourceColumn: customer_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_age
+		dataType: double
+		lineageTag: 4693c01a-1541-4323-8a58-6e1e7c76ce54
+		summarizeBy: none
+		sourceColumn: customer_age
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column gender
+		dataType: string
+		lineageTag: 5facfa8a-f923-42bc-8e90-0ee1385c5e2d
+		summarizeBy: none
+		sourceColumn: gender
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_segment
+		dataType: string
+		lineageTag: f3077ed7-0d16-441e-88a8-1b7a4733fbf2
+		summarizeBy: none
+		sourceColumn: customer_segment
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_city
+		dataType: string
+		lineageTag: ab1307d1-7cd1-46fa-b666-bd0867ce1fb9
+		summarizeBy: none
+		sourceColumn: customer_city
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_state
+		dataType: string
+		lineageTag: edd69373-c730-4b6a-b55d-18225ad17410
+		summarizeBy: none
+		sourceColumn: customer_state
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_country
+		dataType: string
+		lineageTag: fa9e4c88-9e9f-44e5-83fd-dfc2e16a86b1
+		summarizeBy: none
+		sourceColumn: customer_country
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: f7fedacb-bd39-4ece-be70-72602bde72c5
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_postal_code
+		dataType: string
+		lineageTag: ec4ce939-a955-422b-8220-096eb455422a
+		summarizeBy: none
+		sourceColumn: customer_postal_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_acquisition_cost
+		dataType: double
+		lineageTag: a473918b-6137-46ad-98c9-a6bb22fe518e
+		summarizeBy: none
+		sourceColumn: customer_acquisition_cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'analytics customers' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost", "ecommerce_analytics"),
+				    analytics_customers = Source{[Schema="analytics",Item="customers"]}[Data]
+				in
+				    analytics_customers
+

@@ -1,0 +1,128 @@
+table 'analytics order_items'
+	lineageTag: 794a0f2d-02ec-474a-840d-0dd9bcd896be
+
+	column order_id
+		dataType: string
+		lineageTag: 01ba20fe-3cc1-4a45-9086-71bc92acdb17
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_id
+		dataType: string
+		lineageTag: 2a0de458-c127-4395-9add-c8d0e09e2ad8
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantity
+		dataType: double
+		lineageTag: 88988154-a8f3-4c98-a966-2a5b50013250
+		summarizeBy: sum
+		sourceColumn: quantity
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column unit_price
+		dataType: double
+		lineageTag: e0ddf9f2-11f3-4b0d-98e1-e437d5948fb3
+		summarizeBy: sum
+		sourceColumn: unit_price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column discount_percentage
+		dataType: double
+		lineageTag: aa533eaa-ed88-43f4-bc82-9a8d39f2f681
+		summarizeBy: sum
+		sourceColumn: discount_percentage
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column discount_amount
+		dataType: double
+		lineageTag: fb43973a-e1fe-4996-aa33-2bc6750d5540
+		summarizeBy: sum
+		sourceColumn: discount_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column gross_sales
+		dataType: double
+		lineageTag: 0f884db2-e39e-4c48-a681-3b72081c9e70
+		summarizeBy: sum
+		sourceColumn: gross_sales
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column tax_amount
+		dataType: double
+		lineageTag: 6a3c4ae1-bef0-44e8-bf6e-faee7705f43f
+		summarizeBy: sum
+		sourceColumn: tax_amount
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column shipping_cost
+		dataType: double
+		lineageTag: 884ebfa7-c47f-4afd-bca4-e49b97307515
+		summarizeBy: sum
+		sourceColumn: shipping_cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column net_sales
+		dataType: double
+		lineageTag: 62fad953-30a2-45bf-8662-60ee0062da52
+		summarizeBy: sum
+		sourceColumn: net_sales
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column product_cost
+		dataType: double
+		lineageTag: 9b371421-14cf-4b71-8978-a3367a3b9fcc
+		summarizeBy: sum
+		sourceColumn: product_cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column profit
+		dataType: double
+		lineageTag: 64cb5681-562d-491d-a977-267665181a34
+		summarizeBy: sum
+		sourceColumn: profit
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'analytics order_items' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost", "ecommerce_analytics"),
+				    analytics_order_items = Source{[Schema="analytics",Item="order_items"]}[Data]
+				in
+				    analytics_order_items
+

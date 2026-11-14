@@ -1,0 +1,90 @@
+table 'analytics products'
+	lineageTag: 05b7e484-d0b4-4eab-a359-358956d2f69f
+
+	column product_id
+		dataType: string
+		lineageTag: 1b9eef0b-17d1-494b-aaaf-6fe49dd4755b
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_name
+		dataType: string
+		lineageTag: e5f3446d-bf77-4940-9aff-3e1176ecf608
+		summarizeBy: none
+		sourceColumn: product_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_category
+		dataType: string
+		lineageTag: 356ce74e-340b-4916-90ac-78643b8d754d
+		summarizeBy: none
+		sourceColumn: product_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_subcategory
+		dataType: string
+		lineageTag: feee4ba9-1479-48e3-a29a-f92c9c903e9f
+		summarizeBy: none
+		sourceColumn: product_subcategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column brand
+		dataType: string
+		lineageTag: b0b55a3b-8f6a-4af8-9f80-e7e29f9cf509
+		summarizeBy: none
+		sourceColumn: brand
+
+		annotation SummarizationSetBy = Automatic
+
+	column supplier
+		dataType: string
+		lineageTag: 8e27efba-8535-4c7a-8ff5-195d8d12fd32
+		summarizeBy: none
+		sourceColumn: supplier
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit_price
+		dataType: double
+		lineageTag: ddcf5fab-54fa-4831-b126-1cb04600bbc8
+		summarizeBy: none
+		sourceColumn: unit_price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column product_cost
+		dataType: double
+		lineageTag: 303a41dc-0c38-4db4-ba80-54f9d0531835
+		summarizeBy: none
+		sourceColumn: product_cost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column product_rating
+		dataType: double
+		lineageTag: b0e8df84-6b71-4fb5-b10a-56384d6e4629
+		summarizeBy: none
+		sourceColumn: product_rating
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'analytics products' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost", "ecommerce_analytics"),
+				    analytics_products = Source{[Schema="analytics",Item="products"]}[Data]
+				in
+				    analytics_products
+
