@@ -63,21 +63,27 @@ Defined in DAX. Net Sales and Profit are dataset-defined measures with no data d
 
 | Measure | Definition | Source |
 |---|---|---|
-| Net Sales (orders) | `SUM(sales[net_sales])` | `sales` |
-| Profit (orders) | `SUM(sales[profit])` | `sales` |
-| Product Sales (orders) | `SUM(sales[gross_sales]) - SUM(sales[discount_amount])` | `sales` |
+| Net Sales (orders) | `SUM('analytics sales'[net_sales])` | `sales` |
+| Profit (orders) | `SUM('analytics sales'[profit])` | `sales` |
+| Product Sales (orders) | `SUM('analytics sales'[gross_sales]) - SUM(sales[discount_amount])` | `sales` |
 | Profit % of Net Sales | `DIVIDE([Profit (orders)], [Net Sales (orders)])` | `sales` |
-| Orders | `DISTINCTCOUNT(sales[order_id])` | `sales` |
-| Active Customers | `DISTINCTCOUNT(sales[customer_id])` | `sales` |
+| Orders | `DISTINCTCOUNT('analytics sales'[order_id])` | `sales` |
+| Active Customers | `DISTINCTCOUNT('analytics sales'[customer_id])` | `sales` |
 | AOV | `DIVIDE([Net Sales (orders)], [Orders])` | `sales` |
-| Discount % of Gross Sales | `DIVIDE(SUM(sales[discount_amount]), SUM(sales[gross_sales]))` | `sales` |
+| Discount % of Gross Sales | `DIVIDE(SUM('analytics sales'[discount_amount]), SUM('analytics sales'[gross_sales]))` | `sales` |
 | Return Rate | Returned orders divided by orders | `sales` |
 | Cancellation Rate | Cancelled orders divided by orders | `sales` |
-| Net Sales (items) | `SUM(order_items[net_sales])` | `order_items` |
-| Profit (items) | `SUM(order_items[profit])` | `order_items` |
+| Net Sales (items) | `SUM('analytics order_items'[net_sales])` | `order_items` |
+| Profit (items) | `SUM('analytics order_items'[profit])` | `order_items` |
 | Net Sales MoM / YoY | Time-intelligence measures on `dates` | `sales` |
 
 Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76, Orders 138,116, Active Customers 24,911, AOV 1,282.50, Return Rate 6.85%, Cancellation Rate 6.08%.
+
+### Measure tests
+
+- Net Sales (orders) = 177,134,263.74 (matches reference, Decimal number type, shown with 2 decimals)
+- Profit (orders) = 76,146,395.76 (matches reference)
+- Orders = 138,116 (matches reference)
 
 ## 6. Scope rules for reports
 

@@ -1,0 +1,39 @@
+table _Measures
+	lineageTag: 80501371-48bf-4857-9c2e-dfa535326699
+
+	measure 'Net Sales (orders)' = SUM('analytics sales'[net_sales])
+		formatString: #,0.00
+		lineageTag: fbdc0aef-3e72-454e-bfd3-ced8c78afceb
+
+	measure 'Profit (orders)' = SUM('analytics sales'[profit])
+		formatString: #,0.00
+		lineageTag: 33ec5be7-09f5-4515-8d00-9d1492138395
+
+	measure Orders = DISTINCTCOUNT('analytics sales'[order_id])
+		formatString: #,0
+		lineageTag: 17e87332-de40-46c8-bfe6-cd925a2c9186
+
+	column Dummy
+		isHidden
+		formatString: 0
+		lineageTag: f59d5a3e-4dee-4fff-b04d-fa648aaf8a41
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Dummy]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = calculated
+		mode: import
+		source =
+				
+				SELECTCOLUMNS(
+				    FILTER(
+				        { (1) },
+				        FALSE()
+				    ),
+				    "Dummy", [Value]
+				)
+
+	annotation PBI_Id = eb05f3be0d564a98babea3185edda928
+

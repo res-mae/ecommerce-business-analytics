@@ -18,6 +18,7 @@ ref table 'analytics dates'
 ref table 'analytics order_items'
 ref table 'analytics products'
 ref table 'analytics sales'
+ref table _Measures
 
 ref cultureInfo en-PH
 
