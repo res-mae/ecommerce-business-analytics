@@ -21,6 +21,87 @@ table _Measures
 		formatString: #,0.00
 		lineageTag: 844ad15a-9a46-41d1-90e6-03c6a3c27ad0
 
+	measure 'Return Rate' =
+			
+			DIVIDE (
+			    CALCULATE(
+			        DISTINCTCOUNT('analytics sales'[order_id]),
+			        'analytics sales'[order_status] = "Returned"
+			    ),
+			    [Orders]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b9b8779f-4a67-4617-802e-9cdef988c666
+
+	measure 'Cancellation Rate' =
+			
+			DIVIDE (
+			    CALCULATE(
+			        DISTINCTCOUNT('analytics sales'[order_id]),
+			        'analytics sales'[order_status] = "Cancelled"
+			    ),
+			    [Orders]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: dce36a12-910a-444f-b00f-36072d01e7b7
+
+	measure 'Profit % of Net Sales' = DIVIDE([Profit (orders)], [Net Sales (orders)])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 289677b2-a6a8-4034-87f3-0d0953e30a78
+
+	measure 'Net Sales (items)' = SUM('analytics order_items'[net_sales])
+		formatString: #,0.00
+		lineageTag: 911ee4d6-ecd2-4fb2-8d22-29ab128b396f
+
+	measure 'Profit (items)' = SUM('analytics order_items'[profit])
+		formatString: #,0.00
+		lineageTag: 97e8c78a-9598-45c9-8ad8-3a19bf22448c
+
+	measure 'Product Sales (orders)' = SUM('analytics sales'[gross_sales]) - SUM('analytics sales'[discount_amount])
+		formatString: #,0.00
+		lineageTag: e7c6057a-84fc-4357-a410-2d6e939328e3
+
+	measure 'Discount % of Gross Sales' = DIVIDE(SUM('analytics sales'[discount_amount]), SUM('analytics sales'[gross_sales]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8e4a94b8-c523-4b32-8852-9d811a6838cc
+
+	measure 'Net Sales PY (orders)' =
+			
+			CALCULATE(
+			    [Net Sales (orders)],
+			    SAMEPERIODLASTYEAR('analytics dates'[date])
+			)
+		formatString: #,0.00
+		lineageTag: 5f9edd90-e33a-4064-8690-6516a6ab4a13
+
+	measure 'Net Sales YoY % (orders)' = ```
+			
+			DIVIDE(
+			    [Net Sales (orders)] - [Net Sales PY (orders)], 
+			    [Net Sales PY (orders)]
+			)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 67370d2b-98bd-4c1d-b6d6-09f3912659c5
+
+	measure 'Net Sales PM (orders)' =
+			
+			CALCULATE(
+			    [Net Sales (orders)],
+			    DATEADD('analytics dates'[date], -1, MONTH)
+			)
+		formatString: #,0.00
+		lineageTag: 3b1c6295-40bd-4410-a3b9-a3f7d725e8d8
+
+	measure 'Net Sales MoM % (orders)' =
+			
+			DIVIDE(
+			    [Net Sales (orders)] - [Net Sales PM (orders)],
+			    [Net Sales PM (orders)]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b9b5a07c-24f9-4f08-9472-bb2b36ebdd6d
+
 	column Dummy
 		isHidden
 		formatString: 0

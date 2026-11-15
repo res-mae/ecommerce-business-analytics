@@ -178,9 +178,12 @@ FROM analytics.sales;
 
 -- analytics.sales: Check financial totals
 -- Result: 177134263.74 total_net_sales, 76146395.76 total_profit
+-- 157143214.06 product sales, 17.28% discount_pct_gross_sales
 SELECT
 	SUM(net_sales) AS total_net_sales,
-	SUM(profit) AS total_profit
+	SUM(profit) AS total_profit,
+	SUM(gross_sales) - SUM(discount_amount) AS product_sales,
+	ROUND(100.0 * SUM(discount_amount) / SUM(gross_sales),2) AS discount_pct_gross_sales
 FROM analytics.sales;
 
 -- analytics.sales: order_date range

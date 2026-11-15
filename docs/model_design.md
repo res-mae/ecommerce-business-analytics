@@ -85,6 +85,15 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 - Profit (orders) = 76,146,395.76 (matches reference)
 - Orders = 138,116 (matches reference)
 - Active Customers = 24,911 (matches reference; counted from `sales`, `customers` has 25,000 rows including 89 who never ordered)
+- AOV = 1,282.50 (matches reference)
+- Net Sales PY (orders): Dec 2022 = 4,900,970.07 (equals Dec 2021 Net Sales); 2021 rows blank
+- Net Sales YoY % (orders): 2022 -1.11%, 2023 +0.57%, 2024 -0.17%, 2025 -1.06% (match Q2a); 2021 blank. A first version divided by current-year Net Sales and gave 100% for 2021; fixed by dividing by PY
+- Net Sales PM (orders): Mar 2021 = 1,905,413.15 (equals Feb 2021 Net Sales); Jan 2021 blank
+- Net Sales MoM % (orders): Feb 2021 -19.75%, Mar 2021 +44.50%, Apr 2021 -10.31%, May 2021 +3.13% (checked by hand); Jan 2021 blank
+- Return Rate = 6.85%, Cancellation Rate = 6.08% (match reference)
+- Profit % of Net Sales matches the hand calculation 76,146,395.76 / 177,134,263.74 (about 43%)
+- Net Sales (items) = 192,398,877.29, Profit (items) = 82,698,038.55 (match order_items totals, all statuses)
+- Product Sales (orders) = 157,143,214.06 and Discount % of Gross Sales = 17.28% (match saved SQL query in sql/04)
 
 ## 6. Scope rules for reports
 
