@@ -13,6 +13,14 @@ table _Measures
 		formatString: #,0
 		lineageTag: 17e87332-de40-46c8-bfe6-cd925a2c9186
 
+	measure 'Active Customers' = DISTINCTCOUNT('analytics sales'[customer_id])
+		formatString: #,0
+		lineageTag: f7330b74-5ce8-4911-a369-c55ea16ff93a
+
+	measure AOV = DIVIDE([Net Sales (orders)], [Orders])
+		formatString: #,0.00
+		lineageTag: 844ad15a-9a46-41d1-90e6-03c6a3c27ad0
+
 	column Dummy
 		isHidden
 		formatString: 0

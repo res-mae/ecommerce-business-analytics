@@ -84,6 +84,7 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 - Net Sales (orders) = 177,134,263.74 (matches reference, Decimal number type, shown with 2 decimals)
 - Profit (orders) = 76,146,395.76 (matches reference)
 - Orders = 138,116 (matches reference)
+- Active Customers = 24,911 (matches reference; counted from `sales`, `customers` has 25,000 rows including 89 who never ordered)
 
 ## 6. Scope rules for reports
 
