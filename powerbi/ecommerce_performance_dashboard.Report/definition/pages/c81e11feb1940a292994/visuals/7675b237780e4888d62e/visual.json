@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "7675b237780e4888d62e",
   "position": {
-    "x": 923.020030816641,
-    "y": 479.26040061633284,
-    "z": 7000,
+    "x": 176.53495440729483,
+    "y": 287.41641337386017,
+    "z": 1000,
     "height": 532.52279635258355,
     "width": 980.42553191489355,
-    "tabOrder": 7000
+    "tabOrder": 1000
   },
   "visual": {
     "visualType": "lineChart",
@@ -119,6 +119,26 @@
                   "Value": "true"
                 }
               }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Monthly Net Sales'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
             }
           }
         }
@@ -129,7 +149,7 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "f817b7babe9c20711000",
+        "name": "d5d799d357e83a09661d",
         "field": {
           "Column": {
             "Expression": {
@@ -143,7 +163,7 @@
         "type": "Categorical"
       },
       {
-        "name": "79ab6c2268500e7a9ad0",
+        "name": "6991add07868e02b2271",
         "field": {
           "Column": {
             "Expression": {
@@ -157,7 +177,7 @@
         "type": "Advanced"
       },
       {
-        "name": "ea224d4f4da068e8d29e",
+        "name": "7c60dffd077628b9dea6",
         "field": {
           "Measure": {
             "Expression": {

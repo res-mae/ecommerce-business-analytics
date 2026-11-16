@@ -137,9 +137,8 @@ table _Measures
 	measure 'AOV (Completed)' = ```
 			DIVIDE([Net Sales (orders, Completed)], [Orders (Completed)]) 
 			```
+		formatString: #,0.00
 		lineageTag: edd3063f-73fd-404e-91c4-601976e93537
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
 	column Dummy
 		isHidden

@@ -4,10 +4,10 @@
   "position": {
     "x": 0,
     "y": 0,
-    "z": 7001,
+    "z": 2000,
     "height": 197,
     "width": 241,
-    "tabOrder": 7001
+    "tabOrder": 2000
   },
   "visual": {
     "visualType": "cardVisual",
@@ -67,26 +67,46 @@
             "metadata": "_Measures.Net Sales (orders, Completed)"
           }
         }
+      ],
+      "label": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Net Sales'"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "_Measures.Net Sales (orders, Completed)"
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Net Sales'"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "3ac38852d156a27a0ba4",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Net Sales (orders, Completed)"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

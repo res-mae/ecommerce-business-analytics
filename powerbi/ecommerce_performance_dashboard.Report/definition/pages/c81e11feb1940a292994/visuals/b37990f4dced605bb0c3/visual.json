@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
-  "name": "cd9f699a25c218529236",
+  "name": "b37990f4dced605bb0c3",
   "position": {
-    "x": 0,
-    "y": 239.63020030816642,
-    "z": 7006,
-    "height": 45.855161787365176,
-    "width": 196.73343605546995,
-    "tabOrder": 7006
+    "x": 20.425531914893618,
+    "y": 1037.3252279635258,
+    "z": 6001,
+    "height": 42.310030395136778,
+    "width": 1232.8267477203647,
+    "tabOrder": 6001
   },
   "visual": {
     "visualType": "textbox",
@@ -19,9 +19,9 @@
               {
                 "textRuns": [
                   {
-                    "value": "ALL STATUSES",
+                    "value": "Completed orders only, except Active Customers (all statuses). Net Sales and Profit include tax and shipping.",
                     "textStyle": {
-                      "fontSize": "18pt"
+                      "fontSize": "14pt"
                     }
                   }
                 ]

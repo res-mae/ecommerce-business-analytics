@@ -4,10 +4,10 @@
   "position": {
     "x": 269.90881458966567,
     "y": 0,
-    "z": 7003,
+    "z": 4000,
     "height": 197,
     "width": 241,
-    "tabOrder": 7003
+    "tabOrder": 4000
   },
   "visual": {
     "visualType": "cardVisual",
@@ -67,26 +67,24 @@
             "metadata": "_Measures.Profit (orders, Completed)"
           }
         }
+      ],
+      "label": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Profit'"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "_Measures.Profit (orders, Completed)"
+          }
+        }
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "dc19d528256dded62b02",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Profit (orders, Completed)"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

@@ -4,10 +4,10 @@
   "position": {
     "x": 826.87211093990754,
     "y": 0,
-    "z": 7004,
+    "z": 5000,
     "height": 197,
     "width": 241,
-    "tabOrder": 7004
+    "tabOrder": 5000
   },
   "visual": {
     "visualType": "cardVisual",
@@ -67,26 +67,24 @@
             "metadata": "_Measures.AOV (Completed)"
           }
         }
+      ],
+      "label": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Average Order Value'"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "_Measures.AOV (Completed)"
+          }
+        }
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "2f7373bfee5209b32ec0",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "AOV (Completed)"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

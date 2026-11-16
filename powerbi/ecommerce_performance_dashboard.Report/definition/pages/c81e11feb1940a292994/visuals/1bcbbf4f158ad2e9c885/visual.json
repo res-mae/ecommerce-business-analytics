@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "1bcbbf4f158ad2e9c885",
   "position": {
-    "x": 532.51155624036994,
-    "y": 315.06933744221885,
-    "z": 3000,
-    "height": 196,
-    "width": 240,
-    "tabOrder": 3000
+    "x": 1139.452887537994,
+    "y": 0,
+    "z": 0,
+    "height": 195.50151975683892,
+    "width": 274.28571428571428,
+    "tabOrder": 0
   },
   "visual": {
     "visualType": "cardVisual",
@@ -67,6 +67,22 @@
             "metadata": "_Measures.Active Customers"
           }
         }
+      ],
+      "label": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Active Customers (all statuses)'"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "_Measures.Active Customers"
+          }
+        }
       ]
     },
     "visualContainerObjects": {
@@ -96,7 +112,7 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "41498a602d10a59e8286",
+        "name": "57485da1866b25854092",
         "field": {
           "Measure": {
             "Expression": {

@@ -38,7 +38,7 @@ All four relationships exist in `relationships.tmdl`, and the Model view shows t
 1. **Order-level measures use `sales` only.** Net Sales, Profit, orders, AOV, returns, cancellations and delivery are all measured on `analytics.sales`, which reconciles with `dataset_statistics`.
 2. **Product-level measures use `order_items` only**, and sum line-level columns. `analytics.order_items` totals run about 8.6% above `analytics.sales` (cause unknown), so the two bases are never shown in the same visual or added together.
 3. **Never sum order-level columns across the order-line relationship.** A product or category slicer filters `order_items` and does not filter `sales`, so sales measures do not respond to it.
-4. **Name measures by source**, for example `Net Sales (orders)` and `Net Sales (items)`. The headline figure is `Net Sales (orders)`.
+4. **Name measures by source**, for example `Net Sales (orders)` and `Net Sales (items)`. The headline figure is Net Sales (orders, Completed). Net Sales (orders) is the all-status reconciliation base.
 5. **Group products by `product_category` and `product_subcategory` together.** Three subcategory names (Storage, Watches, Furniture) appear under two categories each.
 6. **Count active customers with a distinct count of `sales[customer_id]`**, not rows in `customers`, which includes 89 customers who never ordered.
 
@@ -66,7 +66,7 @@ Defined in DAX. Net Sales and Profit are dataset-defined measures with no data d
 |---|---|---|
 | Net Sales (orders) | `SUM('analytics sales'[net_sales])` | `sales` |
 | Profit (orders) | `SUM('analytics sales'[profit])` | `sales` |
-| Product Sales (orders) | `SUM('analytics sales'[gross_sales]) - SUM(sales[discount_amount])` | `sales` |
+| Product Sales (orders) | `SUM('analytics sales'[gross_sales]) - SUM('analytics sales'[discount_amount])` | `sales` |
 | Profit % of Net Sales | `DIVIDE([Profit (orders)], [Net Sales (orders)])` | `sales` |
 | Orders | `DISTINCTCOUNT('analytics sales'[order_id])` | `sales` |
 | Active Customers | `DISTINCTCOUNT('analytics sales'[customer_id])` | `sales` |
@@ -77,6 +77,12 @@ Defined in DAX. Net Sales and Profit are dataset-defined measures with no data d
 | Net Sales (items) | `SUM('analytics order_items'[net_sales])` | `order_items` |
 | Profit (items) | `SUM('analytics order_items'[profit])` | `order_items` |
 | Net Sales MoM / YoY | Time-intelligence measures on `dates` | `sales` |
+| Net Sales (orders, Completed) | `CALCULATE(SUM('analytics sales'[net_sales]), 'analytics sales'[order_status] = "Completed")` | `sales` |
+| Profit (orders, Completed) | Same pattern on `profit` | `sales` |
+| Orders (Completed) | `CALCULATE(DISTINCTCOUNT('analytics sales'[order_id]), 'analytics sales'[order_status] = "Completed")` | `sales` |
+| AOV (Completed) | `DIVIDE([Net Sales (orders, Completed)], [Orders (Completed)])` | `sales` |
+| Net Sales PY / PM (orders) | `CALCULATE([Net Sales (orders)], SAMEPERIODLASTYEAR(...))` / `DATEADD(..., -1, MONTH)`, all statuses | `sales` |
+| Net Sales YoY % / MoM % (orders) | `DIVIDE(current - prior, prior)`, all statuses | `sales` |
 
 Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76, Orders 138,116, Active Customers 24,911, AOV 1,282.50, Return Rate 6.85%, Cancellation Rate 6.08%.
 
@@ -87,10 +93,10 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 - Orders = 138,116 (matches reference)
 - Active Customers = 24,911 (matches reference; counted from `sales`, `customers` has 25,000 rows including 89 who never ordered)
 - AOV = 1,282.50 (matches reference)
-- Net Sales PY (orders): Dec 2022 = 4,900,970.07 (equals Dec 2021 Net Sales); 2021 rows blank
-- Net Sales YoY % (orders): 2022 -1.11%, 2023 +0.57%, 2024 -0.17%, 2025 -1.06% (match Q2a); 2021 blank. A first version divided by current-year Net Sales and gave 100% for 2021; fixed by dividing by PY
-- Net Sales PM (orders): Mar 2021 = 1,905,413.15 (equals Feb 2021 Net Sales); Jan 2021 blank
-- Net Sales MoM % (orders): Feb 2021 -19.75%, Mar 2021 +44.50%, Apr 2021 -10.31%, May 2021 +3.13% (checked by hand); Jan 2021 blank
+- Net Sales PY (orders) (all statuses): Dec 2022 = 4,900,970.07 (equals Dec 2021 Net Sales); 2021 rows blank
+- Net Sales YoY % (orders) (all statuses): 2022 -1.11%, 2023 +0.57%, 2024 -0.17%, 2025 -1.06% (match Q2a); 2021 blank. A first version divided by current-year Net Sales and gave 100% for 2021; fixed by dividing by PY
+- Net Sales PM (orders) (all statuses): Mar 2021 = 1,905,413.15 (equals Feb 2021 Net Sales); Jan 2021 blank
+- Net Sales MoM % (orders) (all statuses): Feb 2021 -19.75%, Mar 2021 +44.50%, Apr 2021 -10.31%, May 2021 +3.13% (checked by hand); Jan 2021 blank
 - Return Rate = 6.85%, Cancellation Rate = 6.08% (match reference)
 - Profit % of Net Sales matches the hand calculation 76,146,395.76 / 177,134,263.74 (about 43%)
 - Net Sales (items) = 192,398,877.29, Profit (items) = 82,698,038.55 (match order_items totals, all statuses)
@@ -112,11 +118,11 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 | Decision | Choice | Reason |
 |---|---|---|
 | Date table | Build `analytics.dates` in SQL | Reproducible, consistent with the rest of the project. Turn off Power BI auto date/time |
-| `sales` to `order_items` relationship | Keep it, single direction | Lets Completed-only filters reach product visuals. The risk is cross-filter mistakes, handled by the rules in section 2 |
+| `sales` to `order_items` relationship | Keep it, single direction | Lets Completed-only filters reach product visuals. The risk is cross-filter mistakes, handled by the rules in section 3 |
 
 ## 8. Pages
 
-1. **Executive Overview:** headline measures, monthly trend, status mix.
+1. **Executive Overview:** Completed orders only, scope in a footnote (Active Customers is all statuses). Return Rate, Cancellation Rate and the status mix are not on this page; the rates move to Customer Behavior.
 2. **Product and Sales Performance:** categories and subcategories (Completed orders, items basis).
 3. **Customer Behavior:** segments, order-frequency bands, returns.
 
