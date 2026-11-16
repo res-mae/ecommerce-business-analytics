@@ -55,6 +55,7 @@ All four relationships exist in `relationships.tmdl`, and the Model view shows t
 
 - `analytics dates` is marked as the date table (`dataCategory: Time`, `date` set as key). `month_name` is sorted by `month_number`; the test visual showed January to December.
 - Hidden columns: 11 in `sales` (8 customer duplicates, `is_repeat_customer`, `customer_order_count`, `order_id`) and 1 in `order_items` (`order_id`), as listed in section 4. Hidden columns remain usable in DAX.
+- The all-status headline measures (`Net Sales (orders)`, `Profit (orders)`, `Orders`, `AOV`) are hidden in the model and kept for reconciliation and as the base of the rates and time-intelligence measures.
 - Auto date/time is disabled (Options > Current File).
 
 ## 5. Measures
@@ -94,10 +95,14 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 - Profit % of Net Sales matches the hand calculation 76,146,395.76 / 177,134,263.74 (about 43%)
 - Net Sales (items) = 192,398,877.29, Profit (items) = 82,698,038.55 (match order_items totals, all statuses)
 - Product Sales (orders) = 157,143,214.06 and Discount % of Gross Sales = 17.28% (match saved SQL query in sql/04)
+- Net Sales (orders, Completed) = 144,195,838.50 (Completed orders)
+- Orders (Completed) = 113,559 (matches Completed count from profiling)
+- Profit (orders, Completed) = 59,758,469.03 (matches saved SQL sum on analytics.sales, order_status = 'Completed')
+- AOV (Completed) = 1,269.79 (Net Sales (orders, Completed) / Orders (Completed); matches hand calculation)
 
 ## 6. Scope rules for reports
 
-- **Order status:** headline measures include all statuses so they reconcile with `dataset_statistics`. They are recorded values, not realized revenue. Show a status slicer or a Completed-only variant next to them.
+- **Order status:** headline measures on the Executive Overview use Completed orders only (assumed business rule, decision 2026-11-16). Rates and Active Customers use all statuses. The all-status measures are kept for reconciliation with `dataset_statistics`, and the figures are recorded values, not realized revenue.
 - **Product and category pages:** Completed orders only, through the `sales` to `order_items` relationship (decision 2026-11-03).
 - **Delivery and rating pages:** Completed orders only. Returned, Cancelled and Pending orders have no delivery data.
 - **Repeat vs one-time customers:** defined from actual order counts in `analytics.sales` (1 order = one-time).

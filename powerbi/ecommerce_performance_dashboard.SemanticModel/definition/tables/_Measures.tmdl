@@ -3,14 +3,17 @@ table _Measures
 
 	measure 'Net Sales (orders)' = SUM('analytics sales'[net_sales])
 		formatString: #,0.00
+		isHidden
 		lineageTag: fbdc0aef-3e72-454e-bfd3-ced8c78afceb
 
 	measure 'Profit (orders)' = SUM('analytics sales'[profit])
 		formatString: #,0.00
+		isHidden
 		lineageTag: 33ec5be7-09f5-4515-8d00-9d1492138395
 
 	measure Orders = DISTINCTCOUNT('analytics sales'[order_id])
 		formatString: #,0
+		isHidden
 		lineageTag: 17e87332-de40-46c8-bfe6-cd925a2c9186
 
 	measure 'Active Customers' = DISTINCTCOUNT('analytics sales'[customer_id])
@@ -19,6 +22,7 @@ table _Measures
 
 	measure AOV = DIVIDE([Net Sales (orders)], [Orders])
 		formatString: #,0.00
+		isHidden
 		lineageTag: 844ad15a-9a46-41d1-90e6-03c6a3c27ad0
 
 	measure 'Return Rate' =
@@ -101,6 +105,41 @@ table _Measures
 			)
 		formatString: 0.00%;-0.00%;0.00%
 		lineageTag: b9b5a07c-24f9-4f08-9472-bb2b36ebdd6d
+
+	measure 'Net Sales (orders, Completed)' = ```
+			
+			 CALCULATE(
+			    SUM('analytics sales'[net_sales]),
+			    'analytics sales'[order_status] = "Completed"
+			 )
+			```
+		formatString: #,0.00
+		lineageTag: d7fef132-8b54-498b-bf16-ffe4ac97acb4
+
+	measure 'Orders (Completed)' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT('analytics sales'[order_id]),
+			    'analytics sales'[order_status] = "Completed"
+			)
+		formatString: #,0
+		lineageTag: a20bf0df-48c0-47d7-b08f-143e1cff1c48
+
+	measure 'Profit (orders, Completed)' =
+			
+			CALCULATE(
+			    SUM('analytics sales'[profit]),
+			    'analytics sales'[order_status] = "Completed"
+			)
+		formatString: #,0.00
+		lineageTag: 22bd9f19-1a8a-48bb-a453-374bf362a6b6
+
+	measure 'AOV (Completed)' = ```
+			DIVIDE([Net Sales (orders, Completed)], [Orders (Completed)]) 
+			```
+		lineageTag: edd3063f-73fd-404e-91c4-601976e93537
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
 	column Dummy
 		isHidden

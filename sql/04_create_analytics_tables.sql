@@ -186,6 +186,14 @@ SELECT
 	ROUND(100.0 * SUM(discount_amount) / SUM(gross_sales),2) AS discount_pct_gross_sales
 FROM analytics.sales;
 
+-- analytics.sales: Check net sales and profit for completed orders
+-- Result: 144195838.50 completed_net_sales, 59758469.03 completed_total_profit
+SELECT
+	SUM(net_sales) AS completed_net_sales,
+	SUM(profit) AS completed_total_profit
+FROM analytics.sales
+WHERE order_status = 'Completed';
+
 -- analytics.sales: order_date range
 -- Result: 2021-01-01 to 2025-12-31
 SELECT
