@@ -313,6 +313,16 @@ SELECT
 	SUM(profit) AS total_profit
 FROM analytics.order_items;
 
+-- analytics.order_items: Total net sales and profit for completed orders
+-- Result: completed net sales 156796214.63 | completed profit 65164085.25
+SELECT
+	SUM(i.net_sales) AS completed_net_sales,
+	SUM(i.profit) AS completed_profit
+FROM analytics.order_items AS i
+INNER JOIN analytics.sales AS s
+	ON i.order_id = s.order_id
+WHERE s.order_status = 'Completed';
+
 -- analytics.order_items: discount_percentage decimal places
 -- Result: 343,632 rows differ from ROUND(discount_percentage, 2), same as raw, so full precision was kept.
 SELECT

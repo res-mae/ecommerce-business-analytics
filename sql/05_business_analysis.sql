@@ -14,6 +14,9 @@ Rules:
 - Delivery and rating analysis uses Completed orders only.
 
 Each query: business question, result, takeaway (finding only if the data shows it).
+
+Scope note: each query states its own scope. Q1, Q2, Q2a, Q4, Q5 and Q6a use all order statuses (recorded values).
+The Power BI Executive Overview headline uses Completed orders only (decision 2026-11-16), so its figures differ from Q2.
 */
 
 -- Q1. By order_status in analytics.sales, how many orders are there, what are net_sales 
@@ -178,6 +181,27 @@ INNER JOIN analytics.sales AS s
 WHERE s.order_status = 'Completed'
 GROUP BY p.product_category, p.product_subcategory
 ORDER BY net_sales_rank;
+
+-- Q3a. by category, backs the Power BI category visual
+-- Scope: Completed orders only, order_items basis (page filter on the Product and Sales Performance page)
+-- Result: 15 categories. Net Sales sums to 156,796,214.63 and Profit to 65,164,085.25 (41.56% overall).
+-- By Net Sales: Electronics 33,486,763.01 | Jewelry 20,795,540.76 | Home Appliances 20,295,041.26.
+-- Profit % of Net Sales: highest Grocery 54.10%, Beauty & Personal Care 51.21%, Books & Media 50.90%.
+-- Lowest Electronics 32.58%, Automotive 37.89%, Jewelry 39.17%.
+-- Caveat: Profit and Net Sales both include tax and shipping.
+SELECT
+	p.product_category,
+	SUM(i.net_sales) AS total_net_sales,
+	SUM(i.profit) AS total_profit,
+	ROUND(100.0 * SUM(i.profit) / SUM(i.net_sales),2) AS profit_pct_net_sales
+FROM analytics.order_items AS i
+INNER JOIN analytics.sales AS s
+	ON i.order_id = s.order_id
+INNER JOIN analytics.products AS p
+	ON i.product_id = p.product_id
+WHERE s.order_status = 'Completed'
+GROUP BY p.product_category
+ORDER BY total_net_sales DESC;
 
 -- Q4. Can is_repeat_customer or customer_order_count be used to separate repeat from one-time customers?
 -- Scope: all order statuses (a customer counts every order, including Cancelled and Pending)

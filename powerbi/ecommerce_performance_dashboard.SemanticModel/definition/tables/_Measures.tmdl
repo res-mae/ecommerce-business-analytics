@@ -136,6 +136,10 @@ table _Measures
 		formatString: #,0.00
 		lineageTag: edd3063f-73fd-404e-91c4-601976e93537
 
+	measure 'Profit % of Net Sales (items)' = DIVIDE([Profit (items)], [Net Sales (items)])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 5b40532d-082c-4550-bfde-ab75b8a2ee20
+
 	column Dummy
 		formatString: 0
 		lineageTag: f59d5a3e-4dee-4fff-b04d-fa648aaf8a41

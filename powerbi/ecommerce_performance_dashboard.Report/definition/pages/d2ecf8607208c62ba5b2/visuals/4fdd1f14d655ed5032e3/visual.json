@@ -19,7 +19,18 @@
               {
                 "textRuns": [
                   {
-                    "value": "SALES PERFORMANCE DASHBOARD",
+                    "value": "E-COMMERCE",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "24pt",
+                      "color": "#ffffff"
+                    }
+                  },
+                  {
+                    "value": " "
+                  },
+                  {
+                    "value": "PERFORMANCE DASHBOARD",
                     "textStyle": {
                       "fontWeight": "bold",
                       "fontSize": "24pt",

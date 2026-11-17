@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "0180e4cbe98b2e8ae400",
+  "position": {
+    "x": 24,
+    "y": 680,
+    "z": 11000,
+    "height": 30,
+    "width": 1232,
+    "tabOrder": 11000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "\t",
+                    "textStyle": {
+                      "color": "#102d50"
+                    }
+                  },
+                  {
+                    "value": "Completed orders, order-line basis; totals run about 8.6% to 8.7% above order-level totals (cause unknown). Net Sales and Profit include tax and shipping.",
+                    "textStyle": {
+                      "fontSize": "10pt",
+                      "color": "#102d50"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
