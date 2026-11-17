@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
-  "name": "b37990f4dced605bb0c3",
+  "name": "4fdd1f14d655ed5032e3",
   "position": {
-    "x": 20.425531914893618,
-    "y": 1037.3252279635258,
-    "z": 6001,
-    "height": 42.310030395136778,
-    "width": 1232.8267477203647,
-    "tabOrder": 6001
+    "x": 150,
+    "y": 19,
+    "z": 9000,
+    "height": 48.000000000000007,
+    "width": 768.00000000000011,
+    "tabOrder": 9000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,9 +19,11 @@
               {
                 "textRuns": [
                   {
-                    "value": "Completed orders only, except Active Customers (all statuses). Net Sales and Profit include tax and shipping.",
+                    "value": "SALES PERFORMANCE DASHBOARD",
                     "textStyle": {
-                      "fontSize": "14pt"
+                      "fontWeight": "bold",
+                      "fontSize": "24pt",
+                      "color": "#ffffff"
                     }
                   }
                 ]

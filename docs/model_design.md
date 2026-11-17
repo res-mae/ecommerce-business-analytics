@@ -38,7 +38,7 @@ All four relationships exist in `relationships.tmdl`, and the Model view shows t
 1. **Order-level measures use `sales` only.** Net Sales, Profit, orders, AOV, returns, cancellations and delivery are all measured on `analytics.sales`, which reconciles with `dataset_statistics`.
 2. **Product-level measures use `order_items` only**, and sum line-level columns. `analytics.order_items` totals run about 8.6% above `analytics.sales` (cause unknown), so the two bases are never shown in the same visual or added together.
 3. **Never sum order-level columns across the order-line relationship.** A product or category slicer filters `order_items` and does not filter `sales`, so sales measures do not respond to it.
-4. **Name measures by source**, for example `Net Sales (orders)` and `Net Sales (items)`. The headline figure is Net Sales (orders, Completed). Net Sales (orders) is the all-status reconciliation base.
+4. **Name measures by source**, for example `Net Sales (orders)` and `Net Sales (items)`. The headline figure is `Net Sales (orders, Completed)`. `Net Sales (orders)` is the all-status reconciliation base.
 5. **Group products by `product_category` and `product_subcategory` together.** Three subcategory names (Storage, Watches, Furniture) appear under two categories each.
 6. **Count active customers with a distinct count of `sales[customer_id]`**, not rows in `customers`, which includes 89 customers who never ordered.
 
@@ -55,6 +55,7 @@ All four relationships exist in `relationships.tmdl`, and the Model view shows t
 
 - `analytics dates` is marked as the date table (`dataCategory: Time`, `date` set as key). `month_name` is sorted by `month_number`; the test visual showed January to December.
 - Hidden columns: 11 in `sales` (8 customer duplicates, `is_repeat_customer`, `customer_order_count`, `order_id`) and 1 in `order_items` (`order_id`), as listed in section 4. Hidden columns remain usable in DAX.
+- The status share donut on the Executive Overview does not cross-filter other visuals (Edit interactions set to None). Before this change, clicking the Returned slice changed Active Customers.
 - The all-status headline measures (`Net Sales (orders)`, `Profit (orders)`, `Orders`, `AOV`) are hidden in the model and kept for reconciliation and as the base of the rates and time-intelligence measures.
 - Auto date/time is disabled (Options > Current File).
 
@@ -105,6 +106,7 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 - Orders (Completed) = 113,559 (matches Completed count from profiling)
 - Profit (orders, Completed) = 59,758,469.03 (matches saved SQL sum on analytics.sales, order_status = 'Completed')
 - AOV (Completed) = 1,269.79 (Net Sales (orders, Completed) / Orders (Completed); matches hand calculation)
+- Status share of recorded Net Sales (donut, all statuses): Completed 81.40%, Returned 7.44%, Cancelled 6.41%, Pending 4.75% (sum 100.00%; Completed share matches 144,195,838.50 / 177,134,263.74; the other three match the Q1 summary, which was not re-run)
 
 ## 6. Scope rules for reports
 
@@ -122,7 +124,7 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 
 ## 8. Pages
 
-1. **Executive Overview:** Completed orders only, scope in a footnote (Active Customers is all statuses). Return Rate, Cancellation Rate and the status mix are not on this page; the rates move to Customer Behavior.
+1. **Executive Overview:** Completed orders only, scope in a footnote. Active Customers and one status share donut use all statuses. Return Rate and Cancellation Rate are not on this page; the rates move to Customer Behavior.
 2. **Product and Sales Performance:** categories and subcategories (Completed orders, items basis).
 3. **Customer Behavior:** segments, order-frequency bands, returns.
 

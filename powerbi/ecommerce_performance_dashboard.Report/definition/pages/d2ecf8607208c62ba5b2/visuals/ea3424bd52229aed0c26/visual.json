@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "ea3424bd52229aed0c26",
+  "position": {
+    "x": 24,
+    "y": 680,
+    "z": 6000,
+    "height": 30,
+    "width": 1232,
+    "tabOrder": 6000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "\t"
+                  },
+                  {
+                    "value": "Completed orders only, except Active Customers and the status share (all statuses). Net Sales and Profit include tax and shipping.",
+                    "textStyle": {
+                      "fontSize": "10pt",
+                      "color": "#102d50"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
