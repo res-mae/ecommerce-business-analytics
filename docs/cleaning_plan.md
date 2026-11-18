@@ -12,12 +12,12 @@ The raw layer is never changed. All actions are applied in the analytics layer.
 |---|---|---|---|---|
 | `order_date` | TEXT in raw | Convert to DATE | All 138,116 values parse. Decision 2026-10-17 | Done |
 | `order_time` | TEXT in raw | Convert to TIME | All 138,116 values parse. Decision 2026-10-17 | Done |
-| `is_repeat_customer` | TEXT, only 'True' and 'False' | Convert to BOOLEAN | Decision 2026-10-17 | Done |
+| `is_repeat_customer` | TEXT, only 'True' and 'False' | Convert to BOOLEAN | Decision 2026-10-17. Not used for analysis; see customer_type | Done |
 | `gross_sales` | More than 2 decimals in 29,195 rows (floating-point noise) | Round to 2 decimals | Decision 2026-10-18 | Done |
 | `discount_amount` | More than 2 decimals in 25,885 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
 | `tax_amount` | More than 2 decimals in 29,335 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
 | `shipping_cost` | More than 2 decimals in 34,081 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
-| `net_sales` | More than 2 decimals in 29,433 rows. Includes tax and shipping | Round to 2 decimals. Decide in the model whether Total Sales means `net_sales` | Decision 2026-10-18. Formula check in log | Done |
+| `net_sales` | More than 2 decimals in 29,433 rows. Includes tax and shipping | Round to 2 decimals. Decide in the model whether Total Sales means `net_sales` | Decided 2026-10-29: primary measure | Done |
 | `product_cost` | More than 2 decimals in 29,457 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
 | `profit` | More than 2 decimals in 29,735 rows. Includes tax | Round to 2 decimals. Keep as given. Optional "profit excl. tax" measure later | Decisions 2026-10-17 and 2026-10-18. Rounded sum matches reference profit | Done |
 | `customer_lifetime_value` | More than 2 decimals in 29,963 rows | Round to 2 decimals | Decision 2026-10-18 | Done |
@@ -34,10 +34,11 @@ The raw layer is never changed. All actions are applied in the analytics layer.
 | `return_reason` | NULL on 93.1% (not returned) | No imputation | Log: return columns | No action |
 | `loyalty_points_earned` | 0 on all 24,557 non-Completed orders and 5 Completed orders | None. Valid values | Log: numeric ranges | No action |
 | `quantity` | Differs from the SUM of `order_items` quantity on 11,226 orders | Use sales table for order-level measures | Decision 2026-10-18 | Modeling rule |
-| `has_campaign` (new) | Derived from `campaign_name` | TRUE when a campaign name is recorded. Expected TRUE count 54,883 | Decision 2026-10-18 | Done |
-| `has_coupon` (new) | Derived from `coupon_code` | TRUE when a coupon code is recorded. Expected TRUE count 27,614 | Decision 2026-10-18 | Done |
+| `has_campaign` (new) | Derived from `campaign_name` | TRUE when a campaign name is recorded. TRUE count 54,883 | Decision 2026-10-18 | Done |
+| `has_coupon` (new) | Derived from `coupon_code` | TRUE when a coupon code is recorded. TRUE count 27,614 | Decision 2026-10-18 | Done |
+| `customer_order_count` | Exceeds the actual order count for 37.8% of customers | Not used. Repeat customers come from actual orders | Decision 2026-11-03. Q4c | Modeling rule |
 
-New columns to create: `has_campaign`, `has_coupon`.
+New columns created: `has_campaign`, `has_coupon`.
 All other columns: no cleaning needed.
 
 
@@ -59,7 +60,7 @@ All other columns: no cleaning needed.
 |---|---|---|---|---|
 | `customer_postal_code` | TEXT by design (preserves leading zeros) | Keep as TEXT | Raw table design | No action |
 | `customer_id` | 89 customers have no orders | Count active customers from the sales table | Decision 2026-10-18 | Modeling rule |
-| `customer_type` (new) | Derived from order counts in analytics.sales | One-time, Repeat or No orders | Decision 2026-11-17 | Done.
+| `customer_type` (new) | Derived from order counts in `analytics.sales` | One-time, Repeat or No orders | Decision 2026-11-17 | Done |
 
 All other columns: no cleaning needed (0 NULLs, no blanks, no casing variants, no impossible values).
 
@@ -70,6 +71,10 @@ All other columns: no cleaning needed (0 NULLs, no blanks, no casing variants, n
 | `product_subcategory` | Storage, Watches and Furniture appear under 2 categories each | Always group by `product_category` and `product_subcategory` together | Decision 2026-10-14 | Modeling rule |
 
 All other columns: no cleaning needed.
+
+## dates (derived table)
+
+`analytics.dates` is built in SQL with `GENERATE_SERIES` (2021-01-01 to 2025-12-31, 1,826 days). It is not a cleaning step. Checks are in `data_quality_log.md` and `sql/04`.
 
 ## dataset_statistics
 

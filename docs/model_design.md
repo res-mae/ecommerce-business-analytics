@@ -77,7 +77,6 @@ Defined in DAX. Net Sales and Profit are dataset-defined measures with no data d
 | Cancellation Rate | Cancelled orders divided by orders | `sales` |
 | Net Sales (items) | `SUM('analytics order_items'[net_sales])` | `order_items` |
 | Profit (items) | `SUM('analytics order_items'[profit])` | `order_items` |
-| Net Sales MoM / YoY | Time-intelligence measures on `dates` | `sales` |
 | Net Sales (orders, Completed) | `CALCULATE(SUM('analytics sales'[net_sales]), 'analytics sales'[order_status] = "Completed")` | `sales` |
 | Profit (orders, Completed) | Same pattern on `profit` | `sales` |
 | Orders (Completed) | `CALCULATE(DISTINCTCOUNT('analytics sales'[order_id]), 'analytics sales'[order_status] = "Completed")` | `sales` |
@@ -122,8 +121,8 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 
 - **Order status:** headline measures on the Executive Overview use Completed orders only (assumed business rule, decision 2026-11-16). Rates and Active Customers use all statuses. The all-status measures are kept for reconciliation with `dataset_statistics`, and the figures are recorded values, not realized revenue.
 - **Product and category pages:** Completed orders only, through the `sales` to `order_items` relationship (decision 2026-11-03).
-- **Delivery and rating pages:** Completed orders only. Returned, Cancelled and Pending orders have no delivery data.
 - **Repeat vs one-time customers:** defined from actual order counts in `analytics.sales` (1 order = one-time).
+- **Customer Behavior page:** all order statuses (recorded values), stated in a footnote. Return Rate and Cancellation Rate need all orders as the denominator, because Completed orders contain no returns or cancellations.
 
 ## 7. Decisions
 
@@ -134,7 +133,7 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 
 ## 8. Pages
 
-1. **Executive Overview:** Completed orders only, scope in a footnote. Active Customers and one status share donut use all statuses. Return Rate and Cancellation Rate are not on this page; the rates move to Customer Behavior.
+1. **Executive Overview:** Completed orders only, scope in a footnote. Active Customers and one status share donut use all statuses. Return Rate and Cancellation Rate are not on this page; the rates are on Customer Behavior.
 2. **Product and Sales Performance:** Completed orders, order-line basis (page filter). Cards, Net Sales and Profit % of Net Sales by category, subcategory table (120 rows). Footnote states the basis and the gap to order-level totals.
 3. **Customer Behavior:** all order statuses (recorded values, stated in a footnote). Return Rate and Cancellation Rate cards, Net Sales and Net Sales per Customer by segment, Customers by Type (repeat vs one-time, from `customer_type`).
 
@@ -144,3 +143,5 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 - `analytics.order_items` and `analytics.sales` do not reconcile (about 8.6%, cause unknown).
 - Delivery and rating analysis covers Completed orders only.
 - Net Sales and Profit include tax and shipping.
+- Discounts and delivery are analyzed in SQL but not shown on the dashboard.
+- The Completed headline is an assumed business rule (decision 2026-11-16).

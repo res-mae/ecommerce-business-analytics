@@ -20,10 +20,10 @@
 | Blank and placeholder values in text columns | 0 matches in all 29 text columns for empty or whitespace-only strings and for N/A, NA, NULL, UNKNOWN, NONE. | None needed. | Complete |
 | Casing, spelling and out-of-place values in categorical columns | 16 categorical columns reviewed by skimming distinct values with counts (91 values). No casing variants, typos or out-of-place values found. | None needed. | Complete |
 | Do status fields make business sense? | All 9,462 Returned and all 6,697 Pending orders have delivery_status = 'Cancelled' and no delivery days. A return normally follows a delivery (observation, cause unknown). | Use delivery_status and delivery_days only for Completed orders. Do not analyze returns against delivery delay. | Complete |
-| Numeric ranges (17 numeric columns) | No impossible values. Age 18 to 74, quantity 1 to 24, rating 1.6 to 5.0, all money columns positive except profit (1,296 negative rows, min -1,281.59) and profit_margin_percentage (1,295 negative, 1 zero from a -0.01 profit rounding). Zeros in delivery, discount, shipping and loyalty-point columns. All non-Completed orders earn 0 loyalty points. | Keep all values. Negative profit is plausible as real losses, confirmed in Step 5. | Complete |
+| Numeric ranges (17 numeric columns) | No impossible values. Age 18 to 74, quantity 1 to 24, rating 1.6 to 5.0, all money columns positive except profit (1,296 negative rows, min -1,281.59) and profit_margin_percentage (1,295 negative, 1 zero from a -0.01 profit rounding). Zeros in delivery, discount, shipping and loyalty-point columns. All non-Completed orders earn 0 loyalty points. | Keep all values. Negative profit is plausible as real losses. | Complete |
 | Date and time validity | All order_date values match YYYY-MM-DD and all order_time values HH:MM:SS (0 mismatches). Casts to DATE and TIME succeed for all rows. order_date runs 2021-01-01 to 2025-12-31, matching dataset_statistics. | Convert to DATE and TIME in the analytics layer. | Complete |
-| Does net_sales = gross_sales - discount_amount + tax_amount + shipping_cost? | Yes for all 138,116 rows (0 mismatches at 2 decimals). net_sales includes tax and shipping. | None needed. Decide later whether Total Sales means net_sales or gross_sales minus discount. | Complete |
-| Does profit = net_sales - product_cost - shipping_cost? | Yes for all 138,116 rows (0 mismatches, max gap is floating-point noise). Equivalent to gross_sales - discount_amount + tax_amount - product_cost, so profit includes tax. | Use profit as given for now. Decide in the analytics layer whether to recompute profit excluding tax. | Complete |
+| Does net_sales = gross_sales - discount_amount + tax_amount + shipping_cost? | Yes for all 138,116 rows (0 mismatches at 2 decimals). net_sales includes tax and shipping. | Decided 2026-10-29: net_sales is the primary measure. | Complete |
+| Does profit = net_sales - product_cost - shipping_cost? | Yes for all 138,116 rows (0 mismatches, max gap is floating-point noise). Equivalent to gross_sales - discount_amount + tax_amount - product_cost, so profit includes tax. | Decided 2026-10-17: keep profit as given. | Complete |
 | Does profit_margin_percentage = profit / net_sales * 100? | Yes for all 138,116 rows. One row differs only by a rounding tie (stored 26.67, recomputed 26.675). | None needed. | Complete |
 | Time coverage | All 60 months present (2021-01 to 2025-12). Monthly orders range from 1,565 to 3,592 with no sharp drops or spikes (skimmed). | MoM and YoY analysis supported at monthly level. | Complete |
 | Decimal precision of money columns | 8 columns have more than 2 decimals in 18.7% to 24.7% of rows: gross_sales 29,195, discount_amount 25,885, tax_amount 29,335, shipping_cost 34,081, net_sales 29,433, product_cost 29,457, profit 29,735, customer_lifetime_value 29,963. profit_margin_percentage has none. Extra digits are floating-point noise (largest gap 0.000000000004 across all 8 columns). | Round these 8 columns to 2 decimals in the analytics layer. | Complete |
@@ -37,7 +37,7 @@
 | Why do 87 (order_id, product_id) pairs repeat? | All 87 pairs appear exactly twice and none are identical rows. unit_price is the same within every pair. quantity differs in 71 pairs, discount_percentage in 84. The 1 pair matching on quantity, unit_price and discount_percentage still differs by more than 3 in tax_amount, shipping_cost, net_sales and profit. | Not duplicates. Keep all rows. Cause of repetition unknown (likely separate lines, not proven). | Complete |
 | Does gross_sales = quantity * unit_price (rounded to 2 dp)? | Yes for all 397,569 rows. 0 mismatches (NULL-safe check using IS DISTINCT FROM). | None needed. gross_sales is consistent with quantity and unit_price. | Complete |
 | NULLs, blanks and placeholders | 0 NULLs in all 12 columns. 0 matches in the 2 text columns (order_id, product_id) for empty, whitespace-only, N/A, NA, NULL, UNKNOWN, NONE. | None needed. | Complete |
-| Numeric ranges (10 numeric columns) | No impossible values. Quantity 1 to 5, prices and sales amounts positive. Negative profit in 5,426 rows. discount_percentage is a fraction (0 to 0.6). 33 rows have a non-zero discount_percentage but a zero discount_amount. | Keep all values. Check profit and discount consistency in Step 5. | Complete |
+| Numeric ranges (10 numeric columns) | No impossible values. Quantity 1 to 5, prices and sales amounts positive. Negative profit in 5,426 rows. discount_percentage is a fraction (0 to 0.6). 33 rows have a non-zero discount_percentage but a zero discount_amount. | Keep all values. Consistency checked in the rows below. | Complete |
 | Does net_sales = gross_sales - discount_amount + tax_amount + shipping_cost? | Yes for all 397,569 rows (0 mismatches, max gap is floating-point noise). | None needed. | Complete |
 | Does profit = net_sales - product_cost - shipping_cost? | Yes for all 397,569 rows (0 mismatches, max gap is floating-point noise). Same formula as the sales table, so profit includes tax. | Use profit as given for now. Decide in the analytics layer whether to recompute profit excluding tax. | Complete |
 | Does discount_amount = gross_sales * discount_percentage? | Yes for all 397,569 rows at 2 decimals. Max gap 0.005, consistent with rounding. 33 rows have a non-zero discount_percentage but a zero discount_amount, all explained by rounding (largest unrounded discount 0.00496). | None needed. discount_percentage can be used as given. | Complete |
@@ -80,7 +80,7 @@
 | sales table, dataset_statistics | Do the reference statistics match the sales table? | Yes. Total Transactions 138,116, Total Customers 24,911, Total Revenue (net_sales), Total Profit, Average Order Value 1,282.50, Average Rating 3.68 (Completed orders only), Return Rate 6.85% and Cancellation Rate 6.08% all match. The 150k in the file name is a rounded label. Total Products Used is the exception (see next row). | Treat dataset_statistics as consistent with the sales table. | Complete |
 | dataset_statistics, order_items, product_catalog | Total Products Used | Stat says 138,116, equal to Total Transactions. order_items has 1,175 distinct product_id, the same count as product_catalog. The stat does not measure distinct products. | Ignore this stat. Use the 1,175 from the data. | Complete |
 | order_items, product_catalog, sales table, customer_master | Orphan keys (fact to dimension) | 0 order_items rows with a product_id missing from product_catalog. 0 sales rows with a customer_id missing from customer_master. | None needed. Tables can be joined on product_id and customer_id without losing rows. | Complete |
-| customer_master, sales table | Customers without orders (reverse orphan check) | 89 customers in customer_master have no orders (25,000 - 24,911). 0 products in product_catalog without order lines. | Keep the 89 in the raw layer. Count active customers from the sales table. Decide in the model whether to include them in the customer dimension. | Complete |
+| customer_master, sales table | Customers without orders (reverse orphan check) | 89 customers in customer_master have no orders (25,000 - 24,911). 0 products in product_catalog without order lines. | Keep the 89 in the raw layer. Count active customers from the sales table. Decided: kept in the dimension. Active customers are counted from sales. | Complete |
 
 ## Analytics-layer validation
 
@@ -96,6 +96,8 @@
 | Monetary rounding | The 8 planned monetary columns were rounded to 2 decimal places during insertion. `profit_margin_percentage` was left unchanged. | Apply the documented precision decisions in the analytics layer. | Complete |
 | Financial total validation | Total `net_sales` = 177,134,263.74; total `profit` = 76,146,395.76. Both match the expected totals from raw profiling and `dataset_statistics`. | Use `analytics.sales` for order-level financial analysis. | Complete |
 | Date range, decimals, boolean counts and structure | `order_date` runs 2021-01-01 to 2025-12-31. 0 rows with more than 2 decimals in the 8 rounded columns. `is_repeat_customer` has 137,782 TRUE and 334 FALSE. The table has 48 columns (46 source plus 2 flags) with DATE, TIME and BOOLEAN types as intended. | Use `analytics.sales` as the cleaned order-level table. | Complete |
+| `customer_order_count` vs actual orders | Exceeds the actual order count for 9,424 of 24,911 customers (37.8%), by 1 to 5, and is never lower (Q4c in `sql/05`, run on `analytics.sales`). Cause unknown | Do not use. Define repeat customers from actual orders (decision 2026-11-03) | Complete |
+| `delivery_status` vs day counts | Among Completed orders, 511 are labeled Early with a 0-day difference (Q6c in `sql/05`, run on `analytics.sales`). On Time and Delayed labels match the days for every order. Cause unknown | Keep as recorded. Listed as an open question | Complete |
 
 ### analytics.order_items
 
@@ -109,35 +111,28 @@
 
 ### analytics.customers
 
-| Check | Expected result | Status |
-|---|---|---|
-| Table creation | Created from `raw.customer_master` | Complete |
-| Row count | 25,000 rows | Complete |
-| Customer ID uniqueness | 25,000 distinct customer IDs | Complete |
-| NULL customer IDs | 0 | Complete |
-| Source preservation | All 11 source columns and all source rows preserved | Complete |
-| Rows, keys and structure | 25,000 rows, 25,000 distinct `customer_id`, 0 NULL IDs. 11 columns, same as `raw.customer_master`. Includes the 89 customers with no orders. | None needed. Count active customers from `analytics.sales`. | Complete |
-| customer_type | One-time 524, Repeat 24,387, No orders 89 (sum 25,000). 25,000 distinct customer_id, 0 NULLs. The 11 source columns match raw.customer_master (EXCEPT in both directions, 0 rows) | Use customer_type for repeat vs one-time. Do not use is_repeat_customer or customer_order_count | Complete |
-
-No additional cleaning or transformations were required. All 25,000 customer records were retained, including the 89 customers who have no orders in the sales data.
+| Check | Finding | Decision | Status |
+|---|---|---|---|
+| Table creation and row count | Created from `raw.customer_master`. 25,000 rows, 25,000 distinct `customer_id`, 0 NULL IDs | Preserve all source rows. Raw table remains unchanged | Complete |
+| Structure | 12 columns: the 11 columns of `raw.customer_master` plus `customer_type`. Includes the 89 customers with no orders | Count active customers from `analytics.sales` | Complete |
+| Source columns unchanged | The 11 source columns match `raw.customer_master` (EXCEPT in both directions, 0 rows) | None needed | Complete |
+| customer_type | One-time 524, Repeat 24,387, No orders 89 (sum 25,000). Counted from `analytics.sales`, all order statuses | Use `customer_type` for repeat vs one-time. Do not use `is_repeat_customer` or `customer_order_count` | Complete |
 
 ### analytics.products
 
-| Check | Expected result | Status |
-|---|---|---|
-| Table creation | Created from `raw.product_catalog` | Complete |
-| Row count | 1,175 rows | Complete |
-| Product ID uniqueness | 1,175 distinct product IDs | Complete |
-| NULL product IDs | 0 | Complete |
-| Source preservation | All 9 source columns and all source rows preserved | Complete |
-| Rows, keys and structure | 1,175 rows, 1,175 distinct `product_id`, 0 NULL IDs. 9 columns, same as `raw.product_catalog`. | Group by category and subcategory together, since 3 subcategories appear under 2 categories. | Complete |
-
-No additional cleaning or transformations were required. All 1,175 product records were retained, and category and subcategory values were preserved because some subcategories appear under multiple categories.
-
-### analytics.dates
 | Check | Finding | Decision | Status |
 |---|---|---|---|
-| month_name padding | TO_CHAR(d, 'Month') returned names padded to 9 characters (length 9 for all 12 months) | Applied TRIM; after fix lengths are 3 to 9 and match the real names | Complete |
+| Table creation and row count | Created from `raw.product_catalog`. 1,175 rows, 1,175 distinct `product_id`, 0 NULL IDs | Preserve all source rows. Raw table remains unchanged | Complete |
+| Structure | 9 columns, same as `raw.product_catalog`. Category and subcategory values preserved | Group by category and subcategory together, since 3 subcategories appear under 2 categories | Complete |
+
+### analytics.dates
+
+| Check | Finding | Decision | Status |
+|---|---|---|---|
+| Row count and range | 1,826 rows, min 2021-01-01, max 2025-12-31 | Matches the planned range | Complete |
+| Gaps | `date` is the primary key (unique) and the row count equals max - min + 1 (1,826), so there are no gaps | None needed | Complete |
+| month_name padding | `TO_CHAR(d, 'Month')` returned names padded to 9 characters (length 9 for all 12 months) | Applied TRIM. After the fix, lengths are 3 to 9 and match the real names | Complete |
+| Sales dates covered | 0 `analytics.sales` rows have an `order_date` missing from `analytics.dates` | Safe to relate `sales[order_date]` to `dates[date]` | Complete |
 
 ### Analytics-layer relationships
 
