@@ -357,7 +357,8 @@ CREATE TABLE analytics.customers (
 	customer_country             TEXT,
 	region                       TEXT,
 	customer_postal_code         TEXT,
-	customer_acquisition_cost    NUMERIC
+	customer_acquisition_cost    NUMERIC,
+	customer_type                TEXT
 );
 
 INSERT INTO analytics.customers (
@@ -371,21 +372,34 @@ INSERT INTO analytics.customers (
 	customer_country,
 	region,
 	customer_postal_code,
-	customer_acquisition_cost
+	customer_acquisition_cost,
+	customer_type
+)
+WITH order_counts AS (
+	SELECT customer_id, COUNT(*) AS order_count
+	FROM analytics.sales
+	GROUP BY customer_id
 )
 SELECT 
-	customer_id,
-	customer_name,
-	customer_age,
-	gender,
-	customer_segment,
-	customer_city,
-	customer_state,
-	customer_country,
-	region,
-	customer_postal_code,
-	customer_acquisition_cost
-FROM raw.customer_master;
+	c.customer_id,
+	c.customer_name,
+	c.customer_age,
+	c.gender,
+	c.customer_segment,
+	c.customer_city,
+	c.customer_state,
+	c.customer_country,
+	c.region,
+	c.customer_postal_code,
+	c.customer_acquisition_cost,
+	CASE 
+		WHEN o.order_count > 1 THEN 'Repeat'
+		WHEN o.order_count = 1 THEN 'One-time'
+		ELSE 'No orders'
+	END AS customer_type
+FROM raw.customer_master AS c
+LEFT JOIN order_counts AS o
+    ON c.customer_id = o.customer_id;
 
 -- analytics.customers: Verify customer table
 -- Result: row count 25000 | distinct_customer_id 25000 | 0 null
@@ -395,8 +409,17 @@ SELECT
 	COUNT(*) FILTER (WHERE customer_id IS NULL) AS null_customer_id
 FROM analytics.customers;
 
+-- analytics.customers: Count of each customer_type
+-- Result: Repeat 24387 | One-time 524 | No orders 89
+SELECT
+	customer_type,
+	COUNT(*) AS total_rows
+FROM analytics.customers
+GROUP BY customer_type
+ORDER BY total_rows DESC;
+
 -- analytics.customers: column count and data types
--- Result: 11 columns, same as raw.customer_master
+-- Result: 12 columns, the 11 columns of raw.customer_master plus customer_type
 SELECT
 	column_name,
 	data_type,
@@ -405,6 +428,34 @@ FROM information_schema.columns
 WHERE table_schema = 'analytics'
 	AND table_name = 'customers'
 ORDER BY ordinal_position;
+
+-- analytics.customers: Verify the 11 source columns are unchanged vs raw.customer_master
+-- Result: 0 rows in both directions, so the 11 source columns match raw.customer_master exactly
+SELECT
+	customer_id, customer_name, customer_age, gender, customer_segment,
+	customer_city, customer_state, customer_country, region,
+	customer_postal_code, customer_acquisition_cost
+FROM analytics.customers
+EXCEPT
+SELECT
+	customer_id, customer_name, customer_age, gender, customer_segment,
+	customer_city, customer_state, customer_country, region,
+	customer_postal_code, customer_acquisition_cost
+FROM raw.customer_master;
+
+-- analytics.customers: Verify raw.customer_master rows are all present in analytics.customers (reverse direction)
+-- Result: 0 rows
+SELECT
+	customer_id, customer_name, customer_age, gender, customer_segment,
+	customer_city, customer_state, customer_country, region,
+	customer_postal_code, customer_acquisition_cost
+FROM raw.customer_master
+EXCEPT
+SELECT
+	customer_id, customer_name, customer_age, gender, customer_segment,
+	customer_city, customer_state, customer_country, region,
+	customer_postal_code, customer_acquisition_cost
+FROM analytics.customers;
 
 
 -- Builds analytics.products from raw.product_catalog.

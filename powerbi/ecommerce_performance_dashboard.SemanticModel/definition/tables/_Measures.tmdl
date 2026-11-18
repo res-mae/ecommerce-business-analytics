@@ -3,14 +3,17 @@ table _Measures
 
 	measure 'Net Sales (orders)' = SUM('analytics sales'[net_sales])
 		formatString: #,0.00
+		isHidden
 		lineageTag: fbdc0aef-3e72-454e-bfd3-ced8c78afceb
 
 	measure 'Profit (orders)' = SUM('analytics sales'[profit])
 		formatString: #,0.00
+		isHidden
 		lineageTag: 33ec5be7-09f5-4515-8d00-9d1492138395
 
 	measure Orders = DISTINCTCOUNT('analytics sales'[order_id])
 		formatString: #,0
+		isHidden
 		lineageTag: 17e87332-de40-46c8-bfe6-cd925a2c9186
 
 	measure 'Active Customers' = DISTINCTCOUNT('analytics sales'[customer_id])
@@ -19,6 +22,7 @@ table _Measures
 
 	measure AOV = DIVIDE([Net Sales (orders)], [Orders])
 		formatString: #,0.00
+		isHidden
 		lineageTag: 844ad15a-9a46-41d1-90e6-03c6a3c27ad0
 
 	measure 'Return Rate' =
@@ -139,6 +143,12 @@ table _Measures
 	measure 'Profit % of Net Sales (items)' = DIVIDE([Profit (items)], [Net Sales (items)])
 		formatString: 0.00%;-0.00%;0.00%
 		lineageTag: 5b40532d-082c-4550-bfde-ab75b8a2ee20
+
+	measure 'Net Sales per Customer (orders)' = ```
+			DIVIDE([Net Sales (orders)], [Active Customers]) 
+			```
+		formatString: #,0.00
+		lineageTag: 5a994a47-06f8-443b-b108-823ea0d503ed
 
 	column Dummy
 		formatString: 0

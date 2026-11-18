@@ -117,6 +117,7 @@
 | NULL customer IDs | 0 | Complete |
 | Source preservation | All 11 source columns and all source rows preserved | Complete |
 | Rows, keys and structure | 25,000 rows, 25,000 distinct `customer_id`, 0 NULL IDs. 11 columns, same as `raw.customer_master`. Includes the 89 customers with no orders. | None needed. Count active customers from `analytics.sales`. | Complete |
+| customer_type | One-time 524, Repeat 24,387, No orders 89 (sum 25,000). 25,000 distinct customer_id, 0 NULLs. The 11 source columns match raw.customer_master (EXCEPT in both directions, 0 rows) | Use customer_type for repeat vs one-time. Do not use is_repeat_customer or customer_order_count | Complete |
 
 No additional cleaning or transformations were required. All 25,000 customer records were retained, including the 89 customers who have no orders in the sales data.
 

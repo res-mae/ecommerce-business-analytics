@@ -85,6 +85,7 @@ Defined in DAX. Net Sales and Profit are dataset-defined measures with no data d
 | Net Sales PY / PM (orders) | `CALCULATE([Net Sales (orders)], SAMEPERIODLASTYEAR(...))` / `DATEADD(..., -1, MONTH)`, all statuses | `sales` |
 | Net Sales YoY % / MoM % (orders) | `DIVIDE(current - prior, prior)`, all statuses | `sales` |
 | Profit % of Net Sales (items) | `DIVIDE([Profit (items)], [Net Sales (items)])` | `order_items` |
+| Net Sales per Customer (orders) | `DIVIDE([Net Sales (orders)], [Active Customers])` | `sales` |
 
 Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76, Orders 138,116, Active Customers 24,911, AOV 1,282.50, Return Rate 6.85%, Cancellation Rate 6.08%.
 
@@ -113,6 +114,9 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 - Profit % of Net Sales (items), Completed (page filter) = 41.56% overall; Electronics 32.58%, Grocery 54.10% (match saved SQL by category; Net Sales and Profit sums match the page totals)
 - Net Sales (items) by category, Completed: Electronics 33,486,763.01, Jewelry 20,795,540.76, Home Appliances 20,295,041.26 (match saved SQL)
 - Subcategory Performance table (Completed, items basis): 120 rows; Smartphones 6,288,254.76 / 2,155,209.03 / 34.27%, TVs 5,732,863.02 / 1,824,234.32 / 31.82%, Smart Watches 5,207,071.59 / 1,659,470.85 / 31.87% (match Q3)
+- Net Sales (orders) by customer segment (all statuses): Consumer 97,201,007.90, Premium 44,269,794.13, VIP 17,903,164.81, Business 17,760,296.90 (sum 177,134,263.74; shares match Q5, which was not re-run)
+- Net Sales per Customer (orders) by segment (all statuses): Consumer 7,155.02, Business 7,061.75, VIP 7,059.61, Premium 7,054.95 (the range matches Q5, 7,054.95 to 7,155.02)
+- Customers by Type (all statuses): Repeat 24,387, One-time 524 (sum 24,911 = Active Customers; matches Q4a and the customer_type SQL check)
 
 ## 6. Scope rules for reports
 
@@ -132,7 +136,7 @@ Reference values to test against: Net Sales 177,134,263.74, Profit 76,146,395.76
 
 1. **Executive Overview:** Completed orders only, scope in a footnote. Active Customers and one status share donut use all statuses. Return Rate and Cancellation Rate are not on this page; the rates move to Customer Behavior.
 2. **Product and Sales Performance:** Completed orders, order-line basis (page filter). Cards, Net Sales and Profit % of Net Sales by category, subcategory table (120 rows). Footnote states the basis and the gap to order-level totals.
-3. **Customer Behavior:** segments, order-frequency bands, returns.
+3. **Customer Behavior:** all order statuses (recorded values, stated in a footnote). Return Rate and Cancellation Rate cards, Net Sales and Net Sales per Customer by segment, Customers by Type (repeat vs one-time, from `customer_type`).
 
 ## 9. Known limitations
 

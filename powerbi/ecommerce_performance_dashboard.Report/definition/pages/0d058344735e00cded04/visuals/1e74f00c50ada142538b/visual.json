@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
-  "name": "7c10e60c0032a416a1e4",
+  "name": "1e74f00c50ada142538b",
   "position": {
-    "x": 1050,
-    "y": 23,
-    "z": 11000,
-    "height": 22,
-    "width": 190,
-    "tabOrder": 11000
+    "x": 36,
+    "y": 60,
+    "z": 2000,
+    "height": 25,
+    "width": 450,
+    "tabOrder": 2000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,9 +19,10 @@
               {
                 "textRuns": [
                   {
-                    "value": "Reporting Period",
+                    "value": "Customer Behavior",
                     "textStyle": {
-                      "color": "#ffffff"
+                      "fontSize": "12pt",
+                      "color": "#dce7f5"
                     }
                   }
                 ]

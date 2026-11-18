@@ -3,11 +3,11 @@
   "name": "fa89d085059e1b5a8e35",
   "position": {
     "x": 653.63636363636363,
-    "y": 226.36363636363635,
-    "z": 11001,
-    "height": 248.18181818181816,
-    "width": 590,
-    "tabOrder": 11001
+    "y": 214,
+    "z": 11000,
+    "height": 210,
+    "width": 595,
+    "tabOrder": 11000
   },
   "visual": {
     "visualType": "barChart",
@@ -66,8 +66,7 @@
             },
             "direction": "Descending"
           }
-        ],
-        "isDefaultSort": true
+        ]
       }
     },
     "objects": {
@@ -80,6 +79,17 @@
                   "expr": {
                     "Literal": {
                       "Value": "'#E5EAF1'"
+                    }
+                  }
+                }
+              }
+            },
+            "labelColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#74849A'"
                     }
                   }
                 }
@@ -320,6 +330,21 @@
               }
             ]
           }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#2563EB'"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "categoryAxis": [
@@ -340,6 +365,27 @@
               "expr": {
                 "Literal": {
                   "Value": "9D"
+                }
+              }
+            },
+            "preferredCategoryWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "20D"
+                }
+              }
+            },
+            "maxMarginFactor": {
+              "expr": {
+                "Literal": {
+                  "Value": "30L"
+                }
+              }
+            },
+            "outerPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "27L"
                 }
               }
             }
@@ -368,7 +414,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "16D"
+                  "Value": "14D"
                 }
               }
             },
@@ -479,37 +525,5 @@
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "0eded9cf3c07e20e0614",
-        "field": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "analytics products"
-              }
-            },
-            "Property": "product_category"
-          }
-        },
-        "type": "Categorical"
-      },
-      {
-        "name": "b38263569ce94e213c12",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Profit % of Net Sales (items)"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

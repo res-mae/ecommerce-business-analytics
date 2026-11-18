@@ -93,6 +93,14 @@ table 'analytics customers'
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
+	column customer_type
+		dataType: string
+		lineageTag: cdaa4f1b-1306-4e01-bbe0-2f9fdfd72776
+		summarizeBy: none
+		sourceColumn: customer_type
+
+		annotation SummarizationSetBy = Automatic
+
 	partition 'analytics customers' = m
 		mode: import
 		source =

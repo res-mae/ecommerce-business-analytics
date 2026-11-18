@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
-  "name": "9a63f4f621decd730a05",
+  "name": "15d106d756bc60737098",
   "position": {
-    "x": 1050,
-    "y": 48,
-    "z": 12000,
-    "height": 30,
-    "width": 190,
-    "tabOrder": 12000
+    "x": 36,
+    "y": 19,
+    "z": 1000,
+    "height": 48.000000000000007,
+    "width": 768.00000000000011,
+    "tabOrder": 1000
   },
   "visual": {
     "visualType": "textbox",
@@ -19,10 +19,21 @@
               {
                 "textRuns": [
                   {
-                    "value": "2021 - 2025",
+                    "value": "E-COMMERCE",
                     "textStyle": {
                       "fontWeight": "bold",
-                      "fontSize": "16pt",
+                      "fontSize": "24pt",
+                      "color": "#ffffff"
+                    }
+                  },
+                  {
+                    "value": " "
+                  },
+                  {
+                    "value": "PERFORMANCE DASHBOARD",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "24pt",
                       "color": "#ffffff"
                     }
                   }

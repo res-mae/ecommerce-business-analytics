@@ -59,6 +59,7 @@ All other columns: no cleaning needed.
 |---|---|---|---|---|
 | `customer_postal_code` | TEXT by design (preserves leading zeros) | Keep as TEXT | Raw table design | No action |
 | `customer_id` | 89 customers have no orders | Count active customers from the sales table | Decision 2026-10-18 | Modeling rule |
+| `customer_type` (new) | Derived from order counts in analytics.sales | One-time, Repeat or No orders | Decision 2026-11-17 | Done.
 
 All other columns: no cleaning needed (0 NULLs, no blanks, no casing variants, no impossible values).
 
